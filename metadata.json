@@ -1,0 +1,6 @@
+{
+  "name": "Design Store Venezuela",
+  "description": "Gigantografía, impresión 3D, grabados láser y diseño gráfico para empaques",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
