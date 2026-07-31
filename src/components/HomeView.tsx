@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { TabType, ServiceItem } from '../types';
 import { SERVICES_DATA } from '../data';
-import { ArrowRight, Sparkles, CheckCircle2, Send, PenTool, Printer, Layers, Zap, MapPin, Mail, Phone, Briefcase, Calendar, Users, Award, TrendingUp, Calculator } from 'lucide-react';
+import { ArrowRight, Sparkles, CheckCircle2, Send, PenTool, Printer, Layers, Zap, MapPin, Mail, Phone, Briefcase, Calendar, Users, Award, TrendingUp, Calculator, Search } from 'lucide-react';
 
 interface HomeViewProps {
   setActiveTab: (tab: TabType) => void;
   onSelectService: (service: ServiceItem) => void;
+  onSearchTracking?: (code: string) => void;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab }) => {
+export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracking }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentSlide3D, setCurrentSlide3D] = useState(0);
+  const [trackingCode, setTrackingCode] = useState('');
 
   const gigantografiaImages = [
     'https://i.postimg.cc/xd1W4Xyn/Whats-App-Image-2026-07-30-at-23-13-33.jpg',
@@ -125,6 +127,72 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab }) => {
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Tracking Search Section - Apple Style Premium */}
+      <section className="py-24 px-4 sm:px-8 relative overflow-hidden flex justify-center bg-white">
+        {/* Dynamic Background elements for Apple aesthetic */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-gradient-to-r from-cyan-100 via-fuchsia-50 to-blue-50 rounded-full blur-[100px] opacity-70 pointer-events-none" />
+
+        <div className="max-w-5xl w-full mx-auto relative z-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="group relative"
+          >
+            {/* Animated glowing border effect */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-blue-400 rounded-[2.5rem] blur opacity-15 group-hover:opacity-30 transition duration-1000" />
+            
+            <div className="relative bg-white/40 backdrop-blur-3xl border border-white/60 shadow-[0_20px_60px_rgba(0,0,0,0.12)] rounded-[2.5rem] p-10 sm:p-16 flex flex-col md:flex-row items-center gap-12 justify-between overflow-hidden">
+              
+              {/* Decorative inner gradient */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-cyan-100/40 to-fuchsia-100/40 rounded-full blur-[60px] pointer-events-none" />
+
+              <div className="text-center md:text-left space-y-4 md:max-w-md relative z-10">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 shadow-sm border border-black/5 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">En tiempo real</span>
+                </div>
+                <h3 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-zinc-900 leading-tight">
+                  Rastrea el estatus <br className="hidden sm:block" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 to-zinc-400 font-medium">de tu orden.</span>
+                </h3>
+              </div>
+              
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (trackingCode.trim() && onSearchTracking) {
+                    onSearchTracking(trackingCode.trim());
+                  }
+                }}
+                className="w-full md:w-auto flex-1 max-w-lg relative z-10"
+              >
+                <div className="relative flex items-center group/form">
+                  <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                    <Search className="w-6 h-6 text-zinc-400 group-focus-within/form:text-cyan-500 transition-colors duration-300" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Código (Ej. 20517462)"
+                    value={trackingCode}
+                    onChange={(e) => setTrackingCode(e.target.value)}
+                    className="w-full pl-16 pr-36 py-6 bg-white/90 backdrop-blur-xl border border-zinc-200/50 rounded-full text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-400 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-medium text-lg"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!trackingCode.trim()}
+                    className="absolute inset-y-2 right-2 px-8 bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-200 disabled:text-zinc-400 text-white rounded-full font-bold transition-all duration-300 flex items-center justify-center shadow-lg active:scale-95"
+                  >
+                    Buscar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -447,7 +515,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab }) => {
         </div>
       </section>
 
-      {/* Cotización Section (Apple Style Glass Form) */}
       <section id="cotizacion" className="py-32 px-4 sm:px-8 bg-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-amber-100/40 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-cyan-100/40 rounded-full blur-[100px] pointer-events-none"></div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TabType } from '../types';
+import { supabase } from '../lib/supabase';
 import { Sparkles, Mail, Lock, User, ArrowRight, ShieldCheck, LogOut, CheckCircle2, Gift, Plus, Trash2, Edit3, Settings, Package, DollarSign, Award, Users, RefreshCw } from 'lucide-react';
 
 interface AccountViewProps {
@@ -80,90 +81,120 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
     setErrorMsg('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loadingAuth, setLoadingAuth] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetchProfile(session.user);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        fetchProfile(session.user);
+      } else {
+        setUserSession(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchProfile = async (user: any) => {
+    try {
+      let { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      
+      // Fallback if no profile is found but auth exists
+      if (error && error.code === 'PGRST116') {
+        const dummyProfile = {
+          name: user.user_metadata?.full_name || 'Usuario',
+          email: user.email,
+          role: 'client',
+          points: 0,
+          tier: 'Standard'
+        };
+        setUserSession({
+          name: dummyProfile.name,
+          email: dummyProfile.email,
+          points: dummyProfile.points,
+          tier: dummyProfile.tier,
+          isAdmin: dummyProfile.role === 'admin'
+        });
+        return;
+      }
+
+      if (data) {
+        setUserSession({
+          name: data.name,
+          email: data.email,
+          points: data.points,
+          tier: data.tier,
+          isAdmin: data.role === 'admin'
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+    setLoadingAuth(true);
 
     if (!formData.email || !formData.password) {
       setErrorMsg('Por favor complete todos los campos obligatorios.');
+      setLoadingAuth(false);
       return;
     }
 
-    if (!isLogin) {
-      if (!formData.name) {
-        setErrorMsg('El nombre es obligatorio para crear una cuenta.');
-        return;
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+        if (error) throw error;
+        setSuccessMsg('Inicio de sesión exitoso.');
+      } else {
+        if (!formData.name) {
+          setErrorMsg('El nombre es obligatorio para crear una cuenta.');
+          setLoadingAuth(false);
+          return;
+        }
+        if (formData.password !== formData.confirmPassword) {
+          setErrorMsg('Las contraseñas no coinciden.');
+          setLoadingAuth(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.name,
+              role: ['admin@designstore.ve', 'legaintcorporation@gmail.com'].includes(formData.email.toLowerCase()) ? 'admin' : 'client'
+            }
+          }
+        });
+        if (error) throw error;
+        setSuccessMsg('Cuenta creada exitosamente. Puedes iniciar sesión ahora.');
+        setIsLogin(true);
       }
-      if (formData.password !== formData.confirmPassword) {
-        setErrorMsg('Las contraseñas no coinciden.');
-        return;
-      }
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Ocurrió un error en la autenticación.');
+    } finally {
+      setLoadingAuth(false);
     }
-
-    // Check if admin
-    const isAdminUser = formData.email.toLowerCase() === 'admin@designstore.ve';
-    const userName = isLogin ? (formData.email.split('@')[0]) : formData.name;
-
-    const sessionData: UserSession = {
-      name: userName,
-      email: formData.email,
-      points: isAdminUser ? 5000 : 750,
-      tier: isAdminUser ? 'Diamante Elite' : 'Oro Pro',
-      isAdmin: isAdminUser
-    };
-
-    // Save or update in usersList
-    const existingIndex = usersList.findIndex(u => u.email.toLowerCase() === formData.email.toLowerCase());
-    let updatedList = [...usersList];
-    if (existingIndex >= 0) {
-      sessionData.points = updatedList[existingIndex].points;
-      sessionData.tier = updatedList[existingIndex].tier;
-      sessionData.isAdmin = updatedList[existingIndex].isAdmin;
-    } else {
-      updatedList.push({
-        id: Date.now().toString(),
-        name: sessionData.name,
-        email: sessionData.email,
-        points: sessionData.points,
-        tier: sessionData.tier,
-        isAdmin: sessionData.isAdmin
-      });
-      setUsersList(updatedList);
-      localStorage.setItem('design_store_all_users', JSON.stringify(updatedList));
-    }
-
-    localStorage.setItem('design_store_user_session', JSON.stringify(sessionData));
-    setUserSession(sessionData);
-    setSuccessMsg(isLogin ? '¡Sesión iniciada con éxito!' : '¡Cuenta creada con éxito!');
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('design_store_user_session');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUserSession(null);
-    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    setSuccessMsg('Sesión cerrada correctamente.');
-  };
-
-  // Admin Actions for Points
-  const handleUpdateUserPoints = (userId: string, newPoints: number) => {
-    const updated = usersList.map(u => u.id === userId ? { ...u, points: Math.max(0, newPoints) } : u);
-    setUsersList(updated);
-    localStorage.setItem('design_store_all_users', JSON.stringify(updated));
-    setEditingUserId(null);
-
-    // If updating current user
-    if (userSession && usersList.find(u => u.id === userId)?.email === userSession.email) {
-      const updatedSession = { ...userSession, points: Math.max(0, newPoints) };
-      setUserSession(updatedSession);
-      localStorage.setItem('design_store_user_session', JSON.stringify(updatedSession));
-    }
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    const updated = usersList.filter(u => u.id !== userId);
-    setUsersList(updated);
-    localStorage.setItem('design_store_all_users', JSON.stringify(updated));
+    setActiveTab('inicio');
   };
 
   const handleAddDemoAdmin = () => {
@@ -209,19 +240,21 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
               </div>
 
               <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setActiveTab('cotizar')}
-                  className="px-6 py-3 rounded-full bg-black text-white font-semibold text-xs hover:bg-zinc-800 transition-all shadow-md flex items-center gap-2"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Nueva Cotización</span>
-                </button>
+                {userSession.isAdmin && (
+                  <button
+                    onClick={() => setActiveTab('admin')}
+                    className="px-6 py-3 rounded-full bg-cyan-600 text-white font-bold text-xs hover:bg-cyan-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    <span>Panel Admin</span>
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
-                  className="px-5 py-3 rounded-full bg-zinc-100 text-red-600 font-semibold text-xs hover:bg-red-50 transition-all border border-zinc-200 flex items-center gap-2"
+                  className="px-6 py-3 rounded-full bg-white text-red-600 font-bold text-xs hover:bg-red-50 hover:text-red-700 transition-all border border-red-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Salir</span>
+                  <LogOut className="w-4 h-4" />
+                  <span>Cerrar Sesión</span>
                 </button>
               </div>
             </div>
@@ -393,7 +426,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
                   onClick={handleAddDemoAdmin}
                   className="text-xs text-zinc-500 hover:text-zinc-900 underline transition-colors"
                 >
-                  ¿Eres Administrador? Haz clic aquí para activar el Panel Admin Demo (admin@designstore.ve)
+                  ¿Eres Administrador? Haz clic aquí para activar el Panel Admin Demo 
                 </button>
               </div>
             )}
@@ -537,7 +570,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
                 onClick={handleAddDemoAdmin}
                 className="text-xs text-zinc-500 hover:text-black underline transition-colors"
               >
-                Acceder como Administrador Demo (admin@designstore.ve)
+                Acceder como Administrador Demo
               </button>
             </div>
 

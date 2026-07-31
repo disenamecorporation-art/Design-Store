@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TabType } from '../types';
-import { Menu, X, ArrowRight, Phone, Sparkles, Search, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Menu, X, ArrowRight, Phone, Sparkles, Search, Instagram, Facebook, Twitter, User, LogOut, Settings } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -8,6 +9,43 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
+  const [session, setSession] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      checkAdmin(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      checkAdmin(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAdmin = async (currentSession: any) => {
+    if (currentSession) {
+      const { data } = await supabase.from('profiles').select('role').eq('id', currentSession.user.id).single();
+      if (data && data.role === 'admin') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    } else {
+      setIsAdmin(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setActiveTab('inicio');
+    setMobileMenuOpen(false);
+  };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -89,6 +127,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           >
             Calculadora
           </button>
+          <button
+            onClick={() => handleNav('tracking')}
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+              activeTab === 'tracking'
+                ? 'bg-black text-white shadow-md scale-100'
+                : 'text-zinc-800 hover:text-black hover:bg-black/10'
+            }`}
+          >
+            Tracking
+          </button>
         </nav>
 
         {/* Right Actions - Two separate buttons: Entrar and Registro */}
@@ -106,27 +154,64 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
           <div className="h-6 w-px bg-zinc-200 mx-1"></div>
 
-          <button
-            onClick={() => handleNav('entrar')}
-            className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 border ${
-              activeTab === 'entrar'
-                ? 'bg-black text-white border-black shadow-sm'
-                : 'bg-white/80 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
-            }`}
-          >
-            Entrar
-          </button>
-          
-          <button
-            onClick={() => handleNav('registro')}
-            className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 shadow-md ${
-              activeTab === 'registro'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-black text-white hover:bg-zinc-800 hover:scale-[1.02]'
-            }`}
-          >
-            Registro
-          </button>
+          {session ? (
+            <>
+              {isAdmin && (
+                <button
+                  onClick={() => handleNav('admin')}
+                  className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 border flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-md ${
+                    activeTab === 'admin'
+                      ? 'bg-cyan-600 text-white border-cyan-600 shadow-md'
+                      : 'bg-white text-cyan-700 border-cyan-200 hover:bg-cyan-50'
+                  }`}
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  Admin Panel
+                </button>
+              )}
+              <button
+                onClick={() => handleNav('cuenta')}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 border flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-md ${
+                  activeTab === 'cuenta'
+                    ? 'bg-black text-white border-black shadow-md'
+                    : 'bg-white text-zinc-900 border-zinc-200 hover:border-zinc-300'
+                }`}
+              >
+                <User className="w-3.5 h-3.5" />
+                Ir a Mi Perfil
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 border border-red-100 flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-sm"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Cerrar Sesión
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => handleNav('entrar')}
+                className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 border ${
+                  activeTab === 'entrar'
+                    ? 'bg-black text-white border-black shadow-sm'
+                    : 'bg-white/80 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
+                }`}
+              >
+                Entrar
+              </button>
+              <button
+                onClick={() => handleNav('registro')}
+                className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 shadow-md ${
+                  activeTab === 'registro'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-black text-white hover:bg-zinc-800 hover:scale-[1.02]'
+                }`}
+              >
+                Registro
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -175,24 +260,64 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             >
               Calculadora
             </button>
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <button
-                onClick={() => handleNav('entrar')}
-                className={`px-4 py-3 rounded-xl text-center font-semibold text-sm transition-colors border ${
-                  activeTab === 'entrar' ? 'bg-black text-white border-black' : 'bg-white text-zinc-800 border-zinc-200'
-                }`}
-              >
-                Entrar
-              </button>
-              <button
-                onClick={() => handleNav('registro')}
-                className={`px-4 py-3 rounded-xl text-center font-semibold text-sm transition-colors ${
-                  activeTab === 'registro' ? 'bg-emerald-600 text-white' : 'bg-black text-white'
-                }`}
-              >
-                Registro
-              </button>
-            </div>
+            <button
+              onClick={() => handleNav('tracking')}
+              className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors ${
+                activeTab === 'tracking' ? 'bg-black text-white' : 'text-zinc-800 hover:bg-zinc-100'
+              }`}
+            >
+              Tracking de Orden
+            </button>
+            {session ? (
+              <div className="flex flex-col gap-2 pt-2 border-t border-zinc-200 mt-2">
+                {isAdmin && (
+                  <button
+                    onClick={() => handleNav('admin')}
+                    className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors flex items-center gap-2 ${
+                      activeTab === 'admin' ? 'bg-cyan-600 text-white' : 'text-zinc-800 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Admin Panel
+                  </button>
+                )}
+                <button
+                  onClick={() => handleNav('cuenta')}
+                  className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors flex items-center gap-2 ${
+                    activeTab === 'cuenta' ? 'bg-black text-white' : 'text-zinc-800 hover:bg-zinc-100'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Ir a Mi Perfil
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Cerrar Sesión
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-200 mt-2">
+                <button
+                  onClick={() => handleNav('entrar')}
+                  className={`px-4 py-3 rounded-xl text-center font-semibold text-sm transition-colors border ${
+                    activeTab === 'entrar' ? 'bg-black text-white border-black' : 'bg-white text-zinc-800 border-zinc-200'
+                  }`}
+                >
+                  Entrar
+                </button>
+                <button
+                  onClick={() => handleNav('registro')}
+                  className={`px-4 py-3 rounded-xl text-center font-semibold text-sm transition-colors ${
+                    activeTab === 'registro' ? 'bg-emerald-600 text-white' : 'bg-black text-white'
+                  }`}
+                >
+                  Registro
+                </button>
+              </div>
+            )}
             
             <div className="pt-4 mt-2 border-t border-zinc-200 flex flex-col gap-2">
               <a

@@ -1,4 +1,15 @@
-export type TabType = 'inicio' | 'cotizar' | 'servicios' | 'calculadora' | 'entrar' | 'registro' | 'cuenta' | 'tutorial-imagenes';
+export type TabType = 'inicio' | 'cotizar' | 'servicios' | 'calculadora' | 'entrar' | 'registro' | 'cuenta' | 'tutorial-imagenes' | 'tracking' | 'admin';
+
+export type OrderStatus = 'COTIZADO' | 'EN PROCESO' | 'DESPACHADO';
+
+export interface Order {
+  id: string;
+  status: OrderStatus;
+  customerName: string;
+  projectName: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface ServiceItem {
   id: string;

@@ -8,14 +8,23 @@ import { ServicesView } from './components/ServicesView';
 import { AccountView } from './components/AccountView';
 import { ImageTutorialView } from './components/ImageTutorialView';
 import { CutCalculatorView } from './components/CutCalculatorView';
+import { TrackingView } from './components/TrackingView';
+import { AdminView } from './components/AdminView';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [trackingCodeParam, setTrackingCodeParam] = useState<string>('');
 
   const handleSelectService = (service: ServiceItem) => {
     setSelectedService(service);
+  };
+
+  const navigateToTracking = (code: string) => {
+    setTrackingCodeParam(code);
+    setActiveTab('tracking');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -34,7 +43,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              <HomeView setActiveTab={setActiveTab} onSelectService={handleSelectService} />
+              <HomeView setActiveTab={setActiveTab} onSelectService={handleSelectService} onSearchTracking={navigateToTracking} />
             </motion.div>
           )}
 
@@ -131,6 +140,30 @@ export default function App() {
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
               <AccountView setActiveTab={setActiveTab} initialMode="entrar" />
+            </motion.div>
+          )}
+
+          {activeTab === 'tracking' && (
+            <motion.div
+              key="tracking"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <TrackingView initialTrackingCode={trackingCodeParam} />
+            </motion.div>
+          )}
+
+          {activeTab === 'admin' && (
+            <motion.div
+              key="admin"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <AdminView />
             </motion.div>
           )}
         </AnimatePresence>

@@ -146,7 +146,11 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
       </div>
 
       <div className="max-w-7xl mx-auto pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
-        <p>© {new Date().getFullYear()} Design Store Venezuela. Todos los derechos reservados.</p>
+        <p>© {new Date().getFullYear()} Design Store Venezuela. Todos los derechos reservados.
+          <button onClick={() => { setActiveTab('admin'); window.scrollTo(0,0); }} className="ml-2 text-zinc-800 hover:text-zinc-500 opacity-20 hover:opacity-100 transition-opacity">
+            Admin
+          </button>
+        </p>
         <div className="flex items-center gap-6">
           <a href="#privacy" onClick={(e) => e.preventDefault()} className="hover:text-zinc-400 transition-colors">Política de Privacidad</a>
           <a href="#terms" onClick={(e) => e.preventDefault()} className="hover:text-zinc-400 transition-colors">Términos de Servicio</a>
