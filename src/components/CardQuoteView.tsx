@@ -64,7 +64,7 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
       (form.comments ? `*Comentarios:* ${encodeURIComponent(form.comments)}%0A` : '') +
       `%0A_Enviado desde Design Store Venezuela_`;
 
-    const whatsappNumber = "584120000000"; // Reemplazar con el número real de WhatsApp de la empresa
+    const whatsappNumber = "584145915757"; // Reemplazar con el número real de WhatsApp de la empresa
     const url = `https://wa.me/${whatsappNumber}?text=${message}`;
     window.open(url, '_blank');
   };

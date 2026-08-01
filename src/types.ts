@@ -1,4 +1,4 @@
-export type TabType = 'inicio' | 'cotizar' | 'servicios' | 'calculadora' | 'entrar' | 'registro' | 'cuenta' | 'tutorial-imagenes' | 'tracking' | 'admin';
+export type TabType = 'inicio' | 'cotizar' | 'servicios' | 'calculadora' | 'entrar' | 'registro' | 'cuenta' | 'tutorial-imagenes' | 'tracking' | 'admin' | 'store' | 'checkout';
 
 export type OrderStatus = 'COTIZADO' | 'EN PROCESO' | 'DESPACHADO';
 
@@ -41,4 +41,19 @@ export interface Testimonial {
   content: string;
   rating: number;
   avatar: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  tags: string[];
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
 }

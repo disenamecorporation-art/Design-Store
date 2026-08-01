@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <Instagram className="w-5 h-5" />
             </a>
             <a 
-              href="https://wa.me/584120000000" 
+              href="https://wa.me/584145915757" 
               target="_blank" 
               rel="noopener noreferrer"
               className="w-10 h-10 rounded-xl bg-zinc-800/80 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors"
@@ -130,7 +130,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             </li>
             <li className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span>+58 (412) 000-0000</span>
+              <span>+58 (414) 591-5757</span>
             </li>
             <li className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-zinc-400 shrink-0" />

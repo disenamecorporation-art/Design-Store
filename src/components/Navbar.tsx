@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { TabType } from '../types';
 import { Menu, X, ArrowRight, Phone, Sparkles, Search, Instagram, Facebook, Twitter, User, LogOut, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useCart } from '../hooks/useCart';
+import { ShoppingBag } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: TabType;
@@ -11,6 +13,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { cartCount, setIsCartOpen } = useCart();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -47,6 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     setMobileMenuOpen(false);
   };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleNav = (tab: TabType) => {
@@ -118,6 +122,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             Servicios
           </button>
           <button
+            onClick={() => handleNav('store')}
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+              activeTab === 'store'
+                ? 'bg-black text-white shadow-md scale-100'
+                : 'text-zinc-800 hover:text-black hover:bg-black/10'
+            }`}
+          >
+            Tienda
+          </button>
+          <button
             onClick={() => handleNav('calculadora')}
             className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
               activeTab === 'calculadora'
@@ -152,42 +166,70 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-cyan-500 transition-colors" />
           </div>
 
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 rounded-full text-zinc-800 hover:bg-zinc-100 transition-colors mr-1"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            {cartCount > 0 && (
+              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                {cartCount}
+              </span>
+            )}
+          </button>
           <div className="h-6 w-px bg-zinc-200 mx-1"></div>
 
           {session ? (
-            <>
-              {isAdmin && (
-                <button
-                  onClick={() => handleNav('admin')}
-                  className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 border flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-md ${
-                    activeTab === 'admin'
-                      ? 'bg-cyan-600 text-white border-cyan-600 shadow-md'
-                      : 'bg-white text-cyan-700 border-cyan-200 hover:bg-cyan-50'
-                  }`}
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  Admin Panel
-                </button>
+            <div className="relative">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl group"
+              >
+                <User className="w-5 h-5 group-hover:animate-bounce" />
+              </button>
+              
+              {userMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)}></div>
+                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-zinc-100 py-3 z-50 animate-in fade-in slide-in-from-top-4 duration-200 origin-top-right">
+                    <div className="px-4 pb-3 mb-2 border-b border-zinc-100">
+                      <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mi Cuenta</p>
+                      <p className="text-sm font-semibold text-zinc-900 truncate mt-1">{session.user?.email}</p>
+                    </div>
+                    
+                    <div className="flex flex-col px-2">
+                      {isAdmin && (
+                        <button
+                          onClick={() => { handleNav('admin'); setUserMenuOpen(false); }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                            activeTab === 'admin' ? 'bg-cyan-50 text-cyan-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                          }`}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Admin Panel
+                        </button>
+                      )}
+                      <button
+                        onClick={() => { handleNav('cuenta'); setUserMenuOpen(false); }}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                          activeTab === 'cuenta' ? 'bg-zinc-100 text-black' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                        }`}
+                      >
+                        <User className="w-4 h-4" />
+                        Mi Perfil
+                      </button>
+                      <button
+                        onClick={() => { handleLogout(); setUserMenuOpen(false); }}
+                        className="px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 text-red-600 hover:bg-red-50 mt-1"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
-              <button
-                onClick={() => handleNav('cuenta')}
-                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 border flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-md ${
-                  activeTab === 'cuenta'
-                    ? 'bg-black text-white border-black shadow-md'
-                    : 'bg-white text-zinc-900 border-zinc-200 hover:border-zinc-300'
-                }`}
-              >
-                <User className="w-3.5 h-3.5" />
-                Ir a Mi Perfil
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-300 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 border border-red-100 flex items-center gap-2 hover:-translate-y-0.5 hover:shadow-sm"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                Cerrar Sesión
-              </button>
-            </>
+            </div>
           ) : (
             <>
               <button
@@ -215,13 +257,26 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         </div>
 
         {/* Mobile menu button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-xl text-zinc-800 hover:bg-zinc-100 focus:outline-none"
+        <div className="md:hidden flex items-center gap-2">
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 rounded-xl text-zinc-800 hover:bg-zinc-100 transition-colors"
+          >
+            <ShoppingBag className="w-6 h-6" />
+            {cartCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                {cartCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-xl text-zinc-800 hover:bg-zinc-100 focus:outline-none"
           aria-label="Abrir menú"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* Mobile dropdown */}
@@ -251,6 +306,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               }`}
             >
               Catálogo de Servicios
+            </button>
+            <button
+              onClick={() => handleNav('store')}
+              className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors ${
+                activeTab === 'store' ? 'bg-black text-white' : 'text-zinc-800 hover:bg-zinc-100'
+              }`}
+            >
+              Tienda
             </button>
             <button
               onClick={() => handleNav('calculadora')}
@@ -321,7 +384,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             
             <div className="pt-4 mt-2 border-t border-zinc-200 flex flex-col gap-2">
               <a
-                href="https://wa.me/584120000000?text=Hola,%20deseo%20más%20información%20sobre%20sus%20servicios."
+                href="https://wa.me/584145915757?text=Hola,%20deseo%20más%20información%20sobre%20sus%20servicios."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 rounded-xl bg-emerald-50 text-emerald-800 font-semibold text-center flex items-center justify-center gap-2 border border-emerald-200"

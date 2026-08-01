@@ -10,6 +10,9 @@ import { ImageTutorialView } from './components/ImageTutorialView';
 import { CutCalculatorView } from './components/CutCalculatorView';
 import { TrackingView } from './components/TrackingView';
 import { AdminView } from './components/AdminView';
+import { StoreView } from './components/StoreView';
+import { CheckoutView } from './components/CheckoutView';
+import { CartDrawer } from './components/CartDrawer';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
@@ -166,9 +169,31 @@ export default function App() {
               <AdminView />
             </motion.div>
           )}
+          {activeTab === 'store' && (
+            <motion.div
+              key="store"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <StoreView />
+            </motion.div>
+          )}
+          {activeTab === 'checkout' && (
+            <motion.div
+              key="checkout"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <CheckoutView setActiveTab={setActiveTab} />
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
-
+      <CartDrawer setActiveTab={setActiveTab} />
       {/* Footer */}
       <Footer setActiveTab={setActiveTab} />
     </div>

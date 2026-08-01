@@ -216,7 +216,7 @@ export const AdminView: React.FC = () => {
           </h2>
           
           <div className="space-y-4">
-            {Object.values(orders).reverse().map(order => (
+            {Object.values(orders).reverse().map((order: any) => (
               <div key={order.id} className="p-6 border border-zinc-100 rounded-2xl bg-zinc-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 hover:shadow-md transition-shadow">
                 <div>
                   <div className="flex items-center gap-3 mb-2">

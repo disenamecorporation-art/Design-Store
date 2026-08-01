@@ -197,6 +197,9 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
     setActiveTab('inicio');
   };
 
+  const handleUpdateUserPoints = (id: string, points: number) => { console.log(id, points); };
+  const handleDeleteUser = (id: string) => { console.log(id); };
+
   const handleAddDemoAdmin = () => {
     const adminSession: UserSession = {
       name: 'Administrador Pro',
