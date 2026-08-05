@@ -2,10 +2,10 @@ const fs = require('fs');
 
 let appSrc = fs.readFileSync('src/App.tsx', 'utf8');
 
-if (!appSrc.includes('import { StoreView }')) {
+if (!appSrc.includes('import { StoreAdminView }')) {
   appSrc = appSrc.replace(
     /import \{ AdminView \} from '\.\/components\/AdminView';/,
-    `import { AdminView } from './components/AdminView';\nimport { StoreView } from './components/StoreView';\nimport { CheckoutView } from './components/CheckoutView';\nimport { CartDrawer } from './components/CartDrawer';`
+    `import { AdminView } from './components/AdminView';\nimport { StoreAdminView } from './components/StoreAdminView';`
   );
 }
 
@@ -23,35 +23,19 @@ appSrc = appSrc.replace(
               <AdminView />
             </motion.div>
           )}
-          {activeTab === 'store' && (
+          {activeTab === 'store-admin' && (
             <motion.div
-              key="store"
+              key="store-admin"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              <StoreView />
-            </motion.div>
-          )}
-          {activeTab === 'checkout' && (
-            <motion.div
-              key="checkout"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <CheckoutView setActiveTab={setActiveTab} />
+              <StoreAdminView />
             </motion.div>
           )}`
 );
 
-// Add CartDrawer before Footer
-appSrc = appSrc.replace(
-  /<\/main>\s*\{\/\* Footer \*\/\}/,
-  `</main>\n      <CartDrawer setActiveTab={setActiveTab} />\n      {/* Footer */}`
-);
 
 fs.writeFileSync('src/App.tsx', appSrc);
-console.log('App updated with store');
+console.log('App updated with store-admin');

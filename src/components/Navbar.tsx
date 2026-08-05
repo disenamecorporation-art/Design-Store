@@ -62,17 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-8 py-3">
       {/* Social Bar */}
-      <div className="max-w-7xl mx-auto flex justify-start gap-4 px-6 pb-2">
-        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-fuchsia-500 transition-colors">
-          <Instagram className="w-3.5 h-3.5" />
-        </a>
-        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-blue-600 transition-colors">
-          <Facebook className="w-3.5 h-3.5" />
-        </a>
-        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-sky-500 transition-colors">
-          <Twitter className="w-3.5 h-3.5" />
-        </a>
-      </div>
+      
 
       <div className="max-w-7xl mx-auto glass-panel rounded-3xl px-6 py-4 flex items-center justify-between shadow-sm bg-white/80 backdrop-blur-xl border border-zinc-200/50">
         {/* Logo - Larger */}
@@ -155,16 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
 
         {/* Right Actions - Two separate buttons: Entrar and Registro */}
         <div className="hidden lg:flex items-center gap-3">
-          <div className="relative group">
-            <input 
-              type="text" 
-              placeholder="Buscar servicios..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-48 rounded-full bg-zinc-100/80 border border-zinc-200/50 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all duration-300 focus:w-64 focus:bg-white placeholder:text-zinc-400"
-            />
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-cyan-500 transition-colors" />
-          </div>
+          
 
           <button
             onClick={() => setIsCartOpen(true)}
@@ -198,17 +179,24 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                     </div>
                     
                     <div className="flex flex-col px-2">
-                      {isAdmin && (
-                        <button
-                          onClick={() => { handleNav('admin'); setUserMenuOpen(false); }}
-                          className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
-                            activeTab === 'admin' ? 'bg-cyan-50 text-cyan-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
-                          }`}
-                        >
-                          <Settings className="w-4 h-4" />
-                          Admin Panel
-                        </button>
-                      )}
+                      {isAdmin && (<><button
+                        onClick={() => { handleNav('admin'); setUserMenuOpen(false); }}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                          activeTab === 'admin' ? 'bg-cyan-50 text-cyan-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                        }`}
+                      >
+                        <Settings className="w-4 h-4" />
+                        Admin CRM
+                      </button>
+                      <button
+                        onClick={() => { handleNav('store-admin'); setUserMenuOpen(false); }}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                          activeTab === 'store-admin' ? 'bg-indigo-50 text-indigo-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                        }`}
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        Admin Tienda
+                      </button></>)}
                       <button
                         onClick={() => { handleNav('cuenta'); setUserMenuOpen(false); }}
                         className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
@@ -279,9 +267,39 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         </div>
       </div>
 
+      {/* Sub Navigation: Search and Social */}
+      <div className="max-w-7xl mx-auto mt-2 flex items-center justify-between gap-3 px-2 sm:px-6">
+        <div className="flex gap-2 sm:gap-3 items-center glass-panel bg-white/90 backdrop-blur-md px-3 sm:px-4 py-2 rounded-full border border-zinc-200/50 shadow-sm shrink-0">
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-fuchsia-500 transition-colors p-1">
+            <Instagram className="w-4 h-4" />
+          </a>
+          <div className="w-px h-4 bg-zinc-300 hidden sm:block"></div>
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-blue-600 transition-colors p-1 hidden sm:block">
+            <Facebook className="w-4 h-4" />
+          </a>
+          <div className="w-px h-4 bg-zinc-300"></div>
+          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-sky-500 transition-colors p-1">
+            <Twitter className="w-4 h-4" />
+          </a>
+        </div>
+        
+        <div className="relative group flex-1 max-w-sm">
+          <input 
+            type="text" 
+            placeholder="Buscar..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 rounded-full bg-white/90 backdrop-blur-md border border-zinc-200/50 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all duration-300 focus:bg-white placeholder:text-zinc-400 shadow-sm"
+          />
+          <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-cyan-500 transition-colors" />
+        </div>
+        
+        <div className="hidden md:block w-[116px] opacity-0 shrink-0">Spacer</div>
+      </div>
+
       {/* Mobile dropdown */}
       {mobileMenuOpen && (
-        <div className="absolute top-full left-4 right-4 mt-2 glass-panel rounded-3xl p-6 shadow-xl md:hidden border border-zinc-200/80 animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className="absolute top-full left-4 right-4 mt-2 bg-white/95 backdrop-blur-3xl rounded-3xl p-6 shadow-2xl md:hidden border border-zinc-200 z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
           <nav className="flex flex-col gap-2">
             <button
               onClick={() => handleNav('inicio')}
@@ -334,6 +352,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             {session ? (
               <div className="flex flex-col gap-2 pt-2 border-t border-zinc-200 mt-2">
                 {isAdmin && (
+                  <>
                   <button
                     onClick={() => handleNav('admin')}
                     className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors flex items-center gap-2 ${
@@ -341,8 +360,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                     }`}
                   >
                     <Settings className="w-4 h-4" />
-                    Admin Panel
+                    Admin CRM
                   </button>
+                  <button
+                    onClick={() => handleNav('store-admin')}
+                    className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors flex items-center gap-2 ${
+                      activeTab === 'store-admin' ? 'bg-indigo-600 text-white' : 'text-zinc-800 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Admin Tienda
+                  </button>
+                  </>
                 )}
                 <button
                   onClick={() => handleNav('cuenta')}

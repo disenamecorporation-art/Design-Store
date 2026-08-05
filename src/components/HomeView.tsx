@@ -13,6 +13,8 @@ interface HomeViewProps {
 export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracking }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentSlide3D, setCurrentSlide3D] = useState(0);
+  const [currentSlideDiseno, setCurrentSlideDiseno] = useState(0);
+  const [currentSlideLaser, setCurrentSlideLaser] = useState(0);
   const [trackingCode, setTrackingCode] = useState('');
 
   const gigantografiaImages = [
@@ -25,9 +27,34 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
   ];
 
   const impresiones3DImages = [
-    'https://i.postimg.cc/QCQ4tDkB/Whats-App-Image-2026-07-30-at-23-12-25.jpg',
-    'https://i.postimg.cc/sxY6Xz9Q/Whats-App-Image-2026-07-30-at-23-12-25-(2).jpg',
-    'https://i.postimg.cc/Zn87RmFW/Whats-App-Image-2026-07-30-at-23-12-25-(3).jpg'
+    'https://i.postimg.cc/8c3QZz6C/Whats-App-Image-2026-08-01-at-19-59-57.jpg',
+    'https://i.postimg.cc/L57Kx81X/Whats-App-Image-2026-08-01-at-19-59-57-(1).jpg',
+    'https://i.postimg.cc/Kj4h7MRM/Whats-App-Image-2026-08-01-at-19-59-57-(2).jpg',
+    'https://i.postimg.cc/C5tTcxqq/Whats-App-Image-2026-08-01-at-19-59-58.jpg',
+    'https://i.postimg.cc/rsbXfwrR/Whats-App-Image-2026-08-01-at-19-59-58-(1).jpg',
+    'https://i.postimg.cc/rsbXfwr0/Whats-App-Image-2026-08-01-at-19-59-58-(2).jpg',
+    'https://i.postimg.cc/90S5LQ74/Whats-App-Image-2026-08-01-at-19-59-58-(3).jpg',
+    'https://i.postimg.cc/90S5LQ7D/Whats-App-Image-2026-08-01-at-19-59-58-(4).jpg',
+    'https://i.postimg.cc/PJcsS5wN/Whats-App-Image-2026-08-01-at-19-59-58-(5).jpg',
+    'https://i.postimg.cc/4yMkWx9y/Whats-App-Image-2026-08-01-at-19-59-58-(6).jpg'
+  ];
+
+  const disenoGraficoImages = [
+    'https://i.postimg.cc/Nj6ZGycV/Whats-App-Image-2026-08-03-at-21-45-17.jpg',
+    'https://i.postimg.cc/SKm3nyQS/Whats-App-Image-2026-08-03-at-21-46-18-(1).jpg',
+    'https://i.postimg.cc/g045RfrK/Whats-App-Image-2026-08-03-at-21-46-18.jpg',
+    'https://i.postimg.cc/PqKcZBNQ/Whats-App-Image-2026-08-03-at-21-46-18-(2).jpg',
+    'https://i.postimg.cc/7LXc7pbM/Whats-App-Image-2026-08-03-at-21-46-19.jpg',
+    'https://i.postimg.cc/6QzSRDTd/Whats-App-Image-2026-08-03-at-21-46-19-(1).jpg'
+  ];
+
+  const grabadosLaserImages = [
+    'https://i.postimg.cc/hG9m5BVG/Whats-App-Image-2026-08-03-at-21-03-10.jpg',
+    'https://i.postimg.cc/LsdfDXgq/Whats-App-Image-2026-08-03-at-21-03-10-(1).jpg',
+    'https://i.postimg.cc/1zpFjQDm/Whats-App-Image-2026-08-03-at-21-03-10-(2).jpg',
+    'https://i.postimg.cc/yNFRbH0s/Whats-App-Image-2026-08-03-at-21-03-10-(3).jpg',
+    'https://i.postimg.cc/R0rfdFJW/Whats-App-Image-2026-08-03-at-21-03-10-(4).jpg',
+    'https://i.postimg.cc/HLG5zx8Y/Whats-App-Image-2026-08-03-at-21-03-10-(5).jpg'
   ];
 
   useEffect(() => {
@@ -43,6 +70,20 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
     }, 4500);
     return () => clearInterval(timer);
   }, [impresiones3DImages.length]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlideDiseno((prev) => (prev + 1) % disenoGraficoImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [disenoGraficoImages.length]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlideLaser((prev) => (prev + 1) % grabadosLaserImages.length);
+    }, 4200);
+    return () => clearInterval(timer);
+  }, [grabadosLaserImages.length]);
 
   return (
     <div className="min-h-screen bg-[#fbfbfd] text-zinc-900 font-sans selection:bg-black selection:text-white overflow-x-hidden">
@@ -306,7 +347,28 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
       <section className="py-32 px-4 sm:px-8 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div className="order-2 lg:order-1 relative h-[600px] rounded-[3rem] overflow-hidden bg-zinc-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] border border-zinc-200 group">
-            <img src="https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&q=80&w=1200" alt="Grabado Láser" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+            {grabadosLaserImages.map((src, index) => (
+              <img 
+                key={src}
+                src={src} 
+                alt={`Grabado Láser ${index + 1}`} 
+                className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
+                  index === currentSlideLaser ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                }`}
+              />
+            ))}
+            <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10">
+              {grabadosLaserImages.map((_, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setCurrentSlideLaser(i)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    i === currentSlideLaser ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/75'
+                  }`}
+                  aria-label={`Ir a la imagen de grabado láser ${i + 1}`}
+                />
+              ))}
+            </div>
           </div>
           <div className="space-y-8 order-1 lg:order-2">
             <div className="w-16 h-16 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm">
@@ -349,21 +411,29 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
                 </div>
               </div>
 
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-                {[
-                  { title: 'Branding & Logos', desc: 'Desarrollo de marcas memorables.', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
-                  { title: 'Empaques', desc: 'Diseños listos para la imprenta.', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                  { title: 'Artes Finales', desc: 'Vectores y colores en CMYK.', color: 'text-amber-600', bg: 'bg-amber-50' },
-                  { title: 'Identidad Visual', desc: 'Manuales de marca y papelería.', color: 'text-green-600', bg: 'bg-green-50' }
-                ].map((item, i) => (
-                  <div key={i} className="bg-white rounded-3xl p-8 shadow-sm border border-zinc-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                    <div className={`w-12 h-12 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                      <Sparkles className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-xl font-bold text-zinc-900 mb-2">{item.title}</h3>
-                    <p className="text-zinc-500 font-medium text-sm leading-relaxed">{item.desc}</p>
-                  </div>
+              <div className="flex-1 w-full relative h-[450px] sm:h-[520px] rounded-[2.5rem] overflow-hidden bg-zinc-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] border border-zinc-200 group shrink-0">
+                {disenoGraficoImages.map((src, index) => (
+                  <img 
+                    key={src}
+                    src={src} 
+                    alt={`Servicios de Diseño Gráfico ${index + 1}`} 
+                    className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
+                      index === currentSlideDiseno ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                    }`}
+                  />
                 ))}
+                <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10">
+                  {disenoGraficoImages.map((_, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => setCurrentSlideDiseno(i)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                        i === currentSlideDiseno ? 'bg-white scale-125' : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                      aria-label={`Ir a la imagen de diseño gráfico ${i + 1}`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -628,8 +698,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
                 >
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-500 ml-1 uppercase tracking-wider">¿Qué servicio requiere?</label>
-                    <select name="service" required className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all text-zinc-900 font-medium outline-none appearance-none">
-                      <option value="" disabled selected>Selecciona un servicio</option>
+                    <select name="service" defaultValue="" required className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all text-zinc-900 font-medium outline-none appearance-none">
+                      <option value="" disabled>Selecciona un servicio</option>
                       <option value="Gigantografía">Gigantografía</option>
                       <option value="Impresión 3D">Impresión 3D</option>
                       <option value="Grabado Láser">Grabado Láser</option>
@@ -652,8 +722,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
 
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-500 ml-1 uppercase tracking-wider">¿Prioridad Urgente?</label>
-                    <select name="priority" required className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all text-zinc-900 font-medium outline-none appearance-none">
-                      <option value="" disabled selected>¿Está dispuesto a pagar por priorizar?</option>
+                    <select name="priority" defaultValue="" required className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all text-zinc-900 font-medium outline-none appearance-none">
+                      <option value="" disabled>¿Está dispuesto a pagar por priorizar?</option>
                       <option value="Sí, dispuesto a pagar extra">Sí, dispuesto a pagar extra por urgencia</option>
                       <option value="No, tiempo estándar">No, tiempo de entrega estándar</option>
                     </select>

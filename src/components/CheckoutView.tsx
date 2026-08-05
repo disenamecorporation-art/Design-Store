@@ -161,7 +161,7 @@ ${itemsList}
 
           {/* Order Summary */}
           <div className="lg:w-[400px] shrink-0">
-            <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-zinc-200 sticky top-32 space-y-8">
+            <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-zinc-200 lg:sticky lg:top-48 space-y-8">
               <h3 className="text-2xl font-bold text-zinc-900">Resumen</h3>
               
               <div className="space-y-4">

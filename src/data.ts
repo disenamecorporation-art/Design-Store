@@ -17,7 +17,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     category: 'Prototipado & Fabricación',
     shortDesc: 'Modelado y fabricación aditiva de alta precisión en PLA, ABS, PETG y resina para prototipos o piezas finales.',
     fullDesc: 'Transformamos tus ideas digitales en objetos físicos reales. Contamos con gran variedad de equipos FDM y Resina SLA para prototipos industriales, piezas mecánicas funcionales, maquetas arquitectónicas, figuras coleccionables y merchandising personalizado.',
-    image: 'https://images.unsplash.com/photo-1633167606207-d840b5070fc2?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://i.postimg.cc/8c3QZz6C/Whats-App-Image-2026-08-01-at-19-59-57.jpg',
     features: ['Prototipado rápido y funcional', 'Impresión en Resina UV de alta resolución', 'Piezas a medida en polímeros técnicos', 'Post-procesado y acabado pintado a mano'],
     iconName: 'Box'
   },
@@ -27,7 +27,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     category: 'Corte y Marcaje de Alta Definición',
     shortDesc: 'Corte y grabado láser de precisión milimétrica sobre acrílico, madera, cuero, vidrio y metales.',
     fullDesc: 'Personaliza y marca tus productos con una calidad insuperable. El grabado láser ofrece durabilidad eterna y acabados sumamente elegantes para placas de reconocimiento, señalización corporativa, artículos promocionales y corte de piezas complejas.',
-    image: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://i.postimg.cc/hG9m5BVG/Whats-App-Image-2026-08-03-at-21-03-10.jpg',
     features: ['Corte y grabado en acrílico y MDF', 'Personalización de artículos promocionales', 'Señalética industrial y corporativa', 'Grabado en cuero, vidrio y metal anodizado'],
     iconName: 'Zap'
   },
@@ -37,7 +37,7 @@ export const SERVICES_DATA: ServiceItem[] = [
     category: 'Packaging & Branding',
     shortDesc: 'Estrategia, diseño estructural y gráfico de envases, cajas y etiquetas que enamoran en el punto de venta.',
     fullDesc: 'El empaque es el vendedor silencioso de tu marca. Diseñamos experiencias de unboxing memorables, optimizando la ergonomía, la resistencia estructural y el atractivo visual para destacar en cualquier anaquel nacional o internacional.',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://i.postimg.cc/Nj6ZGycV/Whats-App-Image-2026-08-03-at-21-45-17.jpg',
     features: ['Diseño estructural de cajas y estuches', 'Identidad visual y etiquetado normativo', 'Renderizado 3D realista previo a producción', 'Asesoría en selección de papeles y acabados'],
     iconName: 'Package'
   },

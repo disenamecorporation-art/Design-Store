@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ==========================================
 CREATE TABLE public.orders (
   id TEXT PRIMARY KEY,
-  status TEXT NOT NULL CHECK (status IN ('COTIZADO', 'EN PROCESO', 'DESPACHADO')),
+  status TEXT NOT NULL CHECK (status IN ('Cotizado', 'Pendiente por impresión', 'En proceso de impresión', 'En proceso de troquelado', 'Terminado', 'Despachado', 'COTIZADO', 'EN PROCESO', 'DESPACHADO')),
   customer_name TEXT NOT NULL,
   project_name TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

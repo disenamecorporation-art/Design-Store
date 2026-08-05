@@ -10,6 +10,7 @@ import { ImageTutorialView } from './components/ImageTutorialView';
 import { CutCalculatorView } from './components/CutCalculatorView';
 import { TrackingView } from './components/TrackingView';
 import { AdminView } from './components/AdminView';
+import { StoreAdminView } from './components/StoreAdminView';
 import { StoreView } from './components/StoreView';
 import { CheckoutView } from './components/CheckoutView';
 import { CartDrawer } from './components/CartDrawer';
@@ -167,6 +168,17 @@ export default function App() {
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
               <AdminView />
+            </motion.div>
+          )}
+          {activeTab === 'store-admin' && (
+            <motion.div
+              key="store-admin"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <StoreAdminView />
             </motion.div>
           )}
           {activeTab === 'store' && (

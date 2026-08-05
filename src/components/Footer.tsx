@@ -146,7 +146,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
       </div>
 
       <div className="max-w-7xl mx-auto pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
-        <p>© {new Date().getFullYear()} Design Store Venezuela. Todos los derechos reservados.
+        <p>© {new Date().getFullYear()} Design Store Venezuela. Todos los derechos reservados. | Hecho por Legaint Corporation.
           <button onClick={() => { setActiveTab('admin'); window.scrollTo(0,0); }} className="ml-2 text-zinc-800 hover:text-zinc-500 opacity-20 hover:opacity-100 transition-opacity">
             Admin
           </button>

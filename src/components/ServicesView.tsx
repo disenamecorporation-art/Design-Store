@@ -40,9 +40,36 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ setActiveTab }) => {
     }
     if (service.id === 'impresion-3d') {
       return [
-        'https://i.postimg.cc/QCQ4tDkB/Whats-App-Image-2026-07-30-at-23-12-25.jpg',
-        'https://i.postimg.cc/sxY6Xz9Q/Whats-App-Image-2026-07-30-at-23-12-25-(2).jpg',
-        'https://i.postimg.cc/Zn87RmFW/Whats-App-Image-2026-07-30-at-23-12-25-(3).jpg'
+        'https://i.postimg.cc/8c3QZz6C/Whats-App-Image-2026-08-01-at-19-59-57.jpg',
+        'https://i.postimg.cc/L57Kx81X/Whats-App-Image-2026-08-01-at-19-59-57-(1).jpg',
+        'https://i.postimg.cc/Kj4h7MRM/Whats-App-Image-2026-08-01-at-19-59-57-(2).jpg',
+        'https://i.postimg.cc/C5tTcxqq/Whats-App-Image-2026-08-01-at-19-59-58.jpg',
+        'https://i.postimg.cc/rsbXfwrR/Whats-App-Image-2026-08-01-at-19-59-58-(1).jpg',
+        'https://i.postimg.cc/rsbXfwr0/Whats-App-Image-2026-08-01-at-19-59-58-(2).jpg',
+        'https://i.postimg.cc/90S5LQ74/Whats-App-Image-2026-08-01-at-19-59-58-(3).jpg',
+        'https://i.postimg.cc/90S5LQ7D/Whats-App-Image-2026-08-01-at-19-59-58-(4).jpg',
+        'https://i.postimg.cc/PJcsS5wN/Whats-App-Image-2026-08-01-at-19-59-58-(5).jpg',
+        'https://i.postimg.cc/4yMkWx9y/Whats-App-Image-2026-08-01-at-19-59-58-(6).jpg'
+      ];
+    }
+    if (service.id === 'grabado-laser') {
+      return [
+        'https://i.postimg.cc/hG9m5BVG/Whats-App-Image-2026-08-03-at-21-03-10.jpg',
+        'https://i.postimg.cc/LsdfDXgq/Whats-App-Image-2026-08-03-at-21-03-10-(1).jpg',
+        'https://i.postimg.cc/1zpFjQDm/Whats-App-Image-2026-08-03-at-21-03-10-(2).jpg',
+        'https://i.postimg.cc/yNFRbH0s/Whats-App-Image-2026-08-03-at-21-03-10-(3).jpg',
+        'https://i.postimg.cc/R0rfdFJW/Whats-App-Image-2026-08-03-at-21-03-10-(4).jpg',
+        'https://i.postimg.cc/HLG5zx8Y/Whats-App-Image-2026-08-03-at-21-03-10-(5).jpg'
+      ];
+    }
+    if (service.id === 'diseno-empaques') {
+      return [
+        'https://i.postimg.cc/Nj6ZGycV/Whats-App-Image-2026-08-03-at-21-45-17.jpg',
+        'https://i.postimg.cc/SKm3nyQS/Whats-App-Image-2026-08-03-at-21-46-18-(1).jpg',
+        'https://i.postimg.cc/g045RfrK/Whats-App-Image-2026-08-03-at-21-46-18.jpg',
+        'https://i.postimg.cc/PqKcZBNQ/Whats-App-Image-2026-08-03-at-21-46-18-(2).jpg',
+        'https://i.postimg.cc/7LXc7pbM/Whats-App-Image-2026-08-03-at-21-46-19.jpg',
+        'https://i.postimg.cc/6QzSRDTd/Whats-App-Image-2026-08-03-at-21-46-19-(1).jpg'
       ];
     }
     return [service.image];

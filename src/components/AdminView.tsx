@@ -12,7 +12,7 @@ export const AdminView: React.FC = () => {
   const [newOrderId, setNewOrderId] = useState('');
   const [newCustomerName, setNewCustomerName] = useState('');
   const [newProjectName, setNewProjectName] = useState('');
-  const [newStatus, setNewStatus] = useState<OrderStatus>('COTIZADO');
+  const [newStatus, setNewStatus] = useState<OrderStatus>('Cotizado');
   
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -86,7 +86,7 @@ export const AdminView: React.FC = () => {
     setNewOrderId('');
     setNewCustomerName('');
     setNewProjectName('');
-    setNewStatus('COTIZADO');
+    setNewStatus('Cotizado');
     
     setSuccessMsg(`Orden #${newOrder.id} creada correctamente.`);
     setTimeout(() => setSuccessMsg(''), 3000);
@@ -187,9 +187,12 @@ export const AdminView: React.FC = () => {
                   onChange={e => setNewStatus(e.target.value as OrderStatus)}
                   className="w-full px-5 py-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-base font-bold text-zinc-800 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-400 transition-all"
                 >
-                  <option value="COTIZADO">Fase 1: Cotizado</option>
-                  <option value="EN PROCESO">Fase 2: En Proceso</option>
-                  <option value="DESPACHADO">Fase 3: Despachado</option>
+                  <option value="Cotizado">Fase 1: Cotizado</option>
+                  <option value="Pendiente por impresión">Fase 2: Pendiente por impresión</option>
+                  <option value="En proceso de impresión">Fase 3: En proceso de impresión</option>
+                  <option value="En proceso de troquelado">Fase 4: En proceso de troquelado</option>
+                  <option value="Terminado">Fase 5: Terminado</option>
+                  <option value="Despachado">Fase 6: Despachado</option>
                 </select>
               </div>
             </div>
@@ -231,14 +234,20 @@ export const AdminView: React.FC = () => {
                     value={order.status}
                     onChange={e => updateOrderStatus(order.id, e.target.value as OrderStatus)}
                     className={`w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-bold border-2 transition-colors cursor-pointer ${
-                      order.status === 'COTIZADO' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
-                      order.status === 'EN PROCESO' ? 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100' :
+                      order.status === 'Cotizado' || order.status === 'COTIZADO' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
+                      order.status === 'Pendiente por impresión' ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
+                      order.status === 'En proceso de impresión' || order.status === 'EN PROCESO' ? 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100' :
+                      order.status === 'En proceso de troquelado' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 hover:bg-fuchsia-100' :
+                      order.status === 'Terminado' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100' :
                       'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                     }`}
                   >
-                    <option value="COTIZADO">Cotizado</option>
-                    <option value="EN PROCESO">En Proceso</option>
-                    <option value="DESPACHADO">Despachado</option>
+                    <option value="Cotizado">Cotizado</option>
+                    <option value="Pendiente por impresión">Pendiente por impresión</option>
+                    <option value="En proceso de impresión">En proceso de impresión</option>
+                    <option value="En proceso de troquelado">En proceso de troquelado</option>
+                    <option value="Terminado">Terminado</option>
+                    <option value="Despachado">Despachado</option>
                   </select>
                 </div>
               </div>

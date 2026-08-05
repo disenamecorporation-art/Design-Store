@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, CheckCircle2, Clock, Truck, ArrowRight } from 'lucide-react';
+import { Package, Search, CheckCircle2, Clock, Truck, Printer, Scissors, PackageCheck, FileSpreadsheet } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Order, OrderStatus } from '../types';
 import { supabase } from '../lib/supabase';
@@ -57,22 +57,36 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
     }
   }, [initialTrackingCode]);
 
-  const getProgressWidth = (status: OrderStatus) => {
+  const getProgressWidth = (status: OrderStatus | string) => {
     switch (status) {
-      case 'COTIZADO': return '33.33%';
-      case 'EN PROCESO': return '66.66%';
+      case 'Cotizado':
+      case 'COTIZADO': return '16.66%';
+      case 'Pendiente por impresión': return '33.33%';
+      case 'En proceso de impresión': return '50%';
+      case 'EN PROCESO': return '50%';
+      case 'En proceso de troquelado': return '66.66%';
+      case 'Terminado': return '83.33%';
+      case 'Despachado':
       case 'DESPACHADO': return '100%';
       default: return '0%';
     }
   };
 
   const steps: { status: OrderStatus; label: string; icon: React.FC<any> }[] = [
-    { status: 'COTIZADO', label: 'Cotizado', icon: Clock },
-    { status: 'EN PROCESO', label: 'En Proceso', icon: Package },
-    { status: 'DESPACHADO', label: 'Despachado', icon: Truck },
+    { status: 'Cotizado', label: 'Cotizado', icon: Clock },
+    { status: 'Pendiente por impresión', label: 'Pendiente Impresión', icon: FileSpreadsheet },
+    { status: 'En proceso de impresión', label: 'En Impresión', icon: Printer },
+    { status: 'En proceso de troquelado', label: 'Troquelado', icon: Scissors },
+    { status: 'Terminado', label: 'Terminado', icon: PackageCheck },
+    { status: 'Despachado', label: 'Despachado', icon: Truck },
   ];
 
-  const currentStepIndex = order ? steps.findIndex(s => s.status === order.status) : -1;
+  const currentStepIndex = order ? steps.findIndex(s => 
+    s.status.toLowerCase() === (order.status || '').toLowerCase() ||
+    (order.status === 'EN PROCESO' && s.status === 'En proceso de impresión') ||
+    (order.status === 'COTIZADO' && s.status === 'Cotizado') ||
+    (order.status === 'DESPACHADO' && s.status === 'Despachado')
+  ) : -1;
 
   return (
     <div className="min-h-screen pt-40 lg:pt-48 pb-20 px-4 sm:px-8 bg-[#fbfbfd]">
@@ -139,7 +153,7 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
                 <p className="text-zinc-500 font-medium mt-1">Cliente: {order.customerName}</p>
               </div>
               <div className="px-5 py-2.5 bg-zinc-50 rounded-full border border-zinc-100 flex items-center gap-2">
-                <div className={`w-2.5 h-2.5 rounded-full ${order.status === 'DESPACHADO' ? 'bg-emerald-500' : 'bg-cyan-500 animate-pulse'}`}></div>
+                <div className={`w-2.5 h-2.5 rounded-full ${order.status === 'Despachado' || order.status === 'DESPACHADO' ? 'bg-emerald-500' : 'bg-cyan-500 animate-pulse'}`}></div>
                 <span className="text-sm font-bold text-zinc-700">{order.status}</span>
               </div>
             </div>
@@ -153,41 +167,41 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
                   initial={{ width: 0 }}
                   animate={{ width: getProgressWidth(order.status) }}
                   transition={{ duration: 1, ease: "easeOut" }}
-                  className={`h-full rounded-full ${order.status === 'DESPACHADO' ? 'bg-emerald-500' : 'bg-gradient-to-r from-cyan-400 to-cyan-500'}`}
+                  className={`h-full rounded-full ${order.status === 'Despachado' || order.status === 'DESPACHADO' ? 'bg-emerald-500' : 'bg-gradient-to-r from-cyan-400 to-cyan-500'}`}
                 />
               </div>
 
               {/* Steps */}
-              <div className="relative flex justify-between">
+              <div className="relative flex justify-between gap-1 overflow-x-auto pb-2 sm:pb-0">
                 {steps.map((step, index) => {
                   const isCompleted = currentStepIndex >= index;
                   const isCurrent = currentStepIndex === index;
                   const Icon = step.icon;
                   
                   return (
-                    <div key={step.status} className="flex flex-col items-center">
+                    <div key={step.status} className="flex flex-col items-center min-w-[70px] sm:min-w-0 flex-1">
                       <motion.div 
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: index * 0.2 }}
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center relative z-10 transition-colors duration-500 ${
+                        transition={{ delay: index * 0.1 }}
+                        className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center relative z-10 transition-colors duration-500 ${
                           isCompleted 
-                            ? (order.status === 'DESPACHADO' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30')
+                            ? (order.status === 'Despachado' || order.status === 'DESPACHADO' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30')
                             : 'bg-white border-2 border-zinc-200 text-zinc-400'
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                         {isCompleted && (
                           <motion.div 
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center ${order.status === 'DESPACHADO' ? 'bg-emerald-500' : 'bg-cyan-500'}`}
+                            className={`absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-white flex items-center justify-center ${order.status === 'Despachado' || order.status === 'DESPACHADO' ? 'bg-emerald-500' : 'bg-cyan-500'}`}
                           >
-                            <CheckCircle2 className="w-3 h-3 text-white" />
+                            <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                           </motion.div>
                         )}
                       </motion.div>
-                      <p className={`mt-4 text-sm font-bold transition-colors duration-500 ${isCurrent ? 'text-zinc-900' : (isCompleted ? 'text-zinc-600' : 'text-zinc-400')}`}>
+                      <p className={`mt-3 text-[11px] sm:text-xs font-bold text-center leading-tight transition-colors duration-500 ${isCurrent ? 'text-zinc-900 font-black' : (isCompleted ? 'text-zinc-700' : 'text-zinc-400')}`}>
                         {step.label}
                       </p>
                     </div>

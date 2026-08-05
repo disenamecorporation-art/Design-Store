@@ -1,6 +1,12 @@
-export type TabType = 'inicio' | 'cotizar' | 'servicios' | 'calculadora' | 'entrar' | 'registro' | 'cuenta' | 'tutorial-imagenes' | 'tracking' | 'admin' | 'store' | 'checkout';
+export type TabType = 'inicio' | 'cotizar' | 'servicios' | 'calculadora' | 'entrar' | 'registro' | 'cuenta' | 'tutorial-imagenes' | 'tracking' | 'admin' | 'store' | 'checkout' | 'store-admin';
 
-export type OrderStatus = 'COTIZADO' | 'EN PROCESO' | 'DESPACHADO';
+export type OrderStatus = 
+  | 'Cotizado'
+  | 'Pendiente por impresión'
+  | 'En proceso de impresión'
+  | 'En proceso de troquelado'
+  | 'Terminado'
+  | 'Despachado';
 
 export interface Order {
   id: string;
