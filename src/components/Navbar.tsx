@@ -196,6 +196,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                       >
                         <ShoppingBag className="w-4 h-4" />
                         Admin Tienda
+                      </button>
+                      <button
+                        onClick={() => { handleNav('admin-p3'); setUserMenuOpen(false); }}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                          activeTab === 'admin-p3' ? 'bg-amber-50 text-amber-700 font-bold' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        Admin Panel #3 (Taller)
                       </button></>)}
                       <button
                         onClick={() => { handleNav('cuenta'); setUserMenuOpen(false); }}
@@ -370,6 +379,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                   >
                     <ShoppingBag className="w-4 h-4" />
                     Admin Tienda
+                  </button>
+                  <button
+                    onClick={() => handleNav('admin-p3')}
+                    className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors flex items-center gap-2 ${
+                      activeTab === 'admin-p3' ? 'bg-amber-600 text-white' : 'text-zinc-800 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    Admin Panel #3 (Taller)
                   </button>
                   </>
                 )}

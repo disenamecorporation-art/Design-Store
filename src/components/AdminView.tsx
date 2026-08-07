@@ -93,10 +93,20 @@ export const AdminView: React.FC = () => {
   };
 
   const updateOrderStatus = async (id: string, status: OrderStatus) => {
+    const previousStatus = orders[id]?.status;
     // optimistic update
     const updatedOrder = { ...orders[id], status, updatedAt: new Date().toISOString() };
     setOrders({ ...orders, [id]: updatedOrder });
-    await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+    
+    const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) {
+      console.error('Error actualizando estado en Supabase:', error);
+      alert(`No se pudo actualizar el estado en Supabase (${error.message}). Recuerda ejecutar la actualización de la tabla en el Editor SQL de Supabase.`);
+      // revert local state
+      if (previousStatus) {
+        setOrders({ ...orders, [id]: { ...orders[id], status: previousStatus } });
+      }
+    }
   };
   
 

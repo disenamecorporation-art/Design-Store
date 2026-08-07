@@ -1,10 +1,18 @@
 -- Habilitar extensión para UUIDs
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- =========================================================================
+-- MIGRACIÓN PARA TABLAS EXISTENTES (Si ya habías creado la tabla 'orders')
+-- Ejecuta estas dos líneas si te da error al cambiar el estado:
+-- =========================================================================
+ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE public.orders ADD CONSTRAINT orders_status_check 
+  CHECK (status IN ('Cotizado', 'Pendiente por impresión', 'En proceso de impresión', 'En proceso de troquelado', 'Terminado', 'Despachado', 'COTIZADO', 'EN PROCESO', 'DESPACHADO'));
+
 -- ==========================================
 -- 1. TABLA DE PROYECTOS (ÓRDENES / TRACKING)
 -- ==========================================
-CREATE TABLE public.orders (
+CREATE TABLE IF NOT EXISTS public.orders (
   id TEXT PRIMARY KEY,
   status TEXT NOT NULL CHECK (status IN ('Cotizado', 'Pendiente por impresión', 'En proceso de impresión', 'En proceso de troquelado', 'Terminado', 'Despachado', 'COTIZADO', 'EN PROCESO', 'DESPACHADO')),
   customer_name TEXT NOT NULL,
