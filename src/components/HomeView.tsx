@@ -23,7 +23,22 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
     'https://i.postimg.cc/k5gkp2FC/Whats-App-Image-2026-07-30-at-23-13-33-(2).jpg',
     'https://i.postimg.cc/wBjSG1cd/Whats-App-Image-2026-07-30-at-23-13-33-(3).jpg',
     'https://i.postimg.cc/xd1W4XyV/Whats-App-Image-2026-07-30-at-23-13-34.jpg',
-    'https://i.postimg.cc/g02fTxq9/Whats-App-Image-2026-07-30-at-23-13-34-(1).jpg'
+    'https://i.postimg.cc/g02fTxq9/Whats-App-Image-2026-07-30-at-23-13-34-(1).jpg',
+    'https://i.postimg.cc/MGNqJkLp/Whats-App-Image-2026-08-01-at-19-38-04-(3).jpg',
+    'https://i.postimg.cc/XYD09S4w/Whats-App-Image-2026-08-01-at-19-36-02.jpg',
+    'https://i.postimg.cc/mg6G7fB1/Whats-App-Image-2026-08-01-at-19-36-32.jpg',
+    'https://i.postimg.cc/Cx6VbTSB/Whats-App-Image-2026-08-01-at-19-36-32-(1).jpg',
+    'https://i.postimg.cc/vZSd5Fbm/Whats-App-Image-2026-08-01-at-19-36-32-(2).jpg',
+    'https://i.postimg.cc/9QNjy5CM/Whats-App-Image-2026-08-01-at-19-36-32-(3).jpg',
+    'https://i.postimg.cc/g2BP3Fmm/Whats-App-Image-2026-08-01-at-19-36-32-(4).jpg',
+    'https://i.postimg.cc/W1fP0LTj/Whats-App-Image-2026-08-01-at-19-38-02.jpg',
+    'https://i.postimg.cc/52tVHNd6/Whats-App-Image-2026-08-01-at-19-38-02-(1).jpg',
+    'https://i.postimg.cc/qv7TtMVp/Whats-App-Image-2026-08-01-at-19-38-03.jpg',
+    'https://i.postimg.cc/Bnv08Q9s/Whats-App-Image-2026-08-01-at-19-38-03-(1).jpg',
+    'https://i.postimg.cc/fRbN3Tnh/Whats-App-Image-2026-08-01-at-19-38-03-(2).jpg',
+    'https://i.postimg.cc/vZms1HFF/Whats-App-Image-2026-08-01-at-19-38-04.jpg',
+    'https://i.postimg.cc/13zQg5hx/Whats-App-Image-2026-08-01-at-19-38-04-(1).jpg',
+    'https://i.postimg.cc/SxKhXN0w/Whats-App-Image-2026-08-01-at-19-38-04-(2).jpg'
   ];
 
   const impresiones3DImages = [
@@ -288,6 +303,19 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
                 </li>
               ))}
             </ul>
+            <div className="pt-4">
+              <button
+                onClick={() => {
+                  const message = encodeURIComponent('Hola, deseo solicitar una cotización detallada para el servicio de *Gigantografía* (Etiquetas, Pendones, Vallas, Rotulados) con Design Store Venezuela.');
+                  window.open(`https://wa.me/584145915757?text=${message}`, '_blank');
+                }}
+                className="px-8 py-4 rounded-full bg-zinc-900 hover:bg-black text-white font-bold text-sm shadow-xl flex items-center gap-3 transition-all hover:-translate-y-0.5"
+              >
+                <Phone className="w-4 h-4 text-emerald-400" />
+                <span>Cotizar Gigantografía por WhatsApp</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </section>

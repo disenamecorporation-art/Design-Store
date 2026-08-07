@@ -269,7 +269,15 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
             Datos de fabricación y venta
           </h3>
 
-          <form onSubmit={handleSaveQuote} className="space-y-6">
+          <form 
+            onSubmit={handleSaveQuote} 
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+                e.preventDefault();
+              }
+            }} 
+            className="space-y-6"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Cliente Select */}
               <div>

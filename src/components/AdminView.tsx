@@ -16,6 +16,49 @@ export const AdminView: React.FC = () => {
   
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Phase Filter States
+  const [selectedPhase, setSelectedPhase] = useState<string>('Todas');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const phaseOptions: { label: string; value: string; colorClass: string; badgeBg: string; activeBg: string }[] = [
+    { label: 'Todas las Fases', value: 'Todas', colorClass: 'text-zinc-700', badgeBg: 'bg-zinc-200 text-zinc-800', activeBg: 'bg-zinc-900 text-white shadow-md' },
+    { label: 'Cotizado', value: 'Cotizado', colorClass: 'text-amber-700', badgeBg: 'bg-amber-100 text-amber-800', activeBg: 'bg-amber-500 text-white shadow-md shadow-amber-500/20' },
+    { label: 'Pendiente Impresión', value: 'Pendiente por impresión', colorClass: 'text-blue-700', badgeBg: 'bg-blue-100 text-blue-800', activeBg: 'bg-blue-600 text-white shadow-md shadow-blue-600/20' },
+    { label: 'En Impresión', value: 'En proceso de impresión', colorClass: 'text-cyan-700', badgeBg: 'bg-cyan-100 text-cyan-800', activeBg: 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20' },
+    { label: 'Troquelado', value: 'En proceso de troquelado', colorClass: 'text-fuchsia-700', badgeBg: 'bg-fuchsia-100 text-fuchsia-800', activeBg: 'bg-fuchsia-600 text-white shadow-md shadow-fuchsia-600/20' },
+    { label: 'Terminado', value: 'Terminado', colorClass: 'text-indigo-700', badgeBg: 'bg-indigo-100 text-indigo-800', activeBg: 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20' },
+    { label: 'Despachado', value: 'Despachado', colorClass: 'text-emerald-700', badgeBg: 'bg-emerald-100 text-emerald-800', activeBg: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' }
+  ];
+
+  const isOrderStatusMatchingPhase = (status: string, phaseValue: string) => {
+    if (phaseValue === 'Todas') return true;
+    const s = (status || '').toLowerCase();
+    const p = phaseValue.toLowerCase();
+    if (p === 'cotizado') return s === 'cotizado';
+    if (p === 'pendiente por impresión') return s === 'pendiente por impresión';
+    if (p === 'en proceso de impresión') return s === 'en proceso de impresión' || s === 'en proceso';
+    if (p === 'en proceso de troquelado') return s === 'en proceso de troquelado';
+    if (p === 'terminado') return s === 'terminado';
+    if (p === 'despachado') return s === 'despachado';
+    return s === p;
+  };
+
+  const getPhaseCount = (phaseValue: string) => {
+    const allOrdersList: Order[] = Object.values(orders);
+    if (phaseValue === 'Todas') return allOrdersList.length;
+    return allOrdersList.filter((o: Order) => isOrderStatusMatchingPhase(o.status, phaseValue)).length;
+  };
+
+  const filteredOrdersList: Order[] = (Object.values(orders) as Order[]).reverse().filter((order: Order) => {
+    const matchesPhase = isOrderStatusMatchingPhase(order.status, selectedPhase);
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q || 
+      order.id.toLowerCase().includes(q) || 
+      order.customerName.toLowerCase().includes(q) || 
+      order.projectName.toLowerCase().includes(q);
+    return matchesPhase && matchesSearch;
+  });
+
   
   const checkAdmin = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -220,49 +263,122 @@ export const AdminView: React.FC = () => {
         </div>
 
         {/* Orders List */}
-        <div className="bg-white p-8 sm:p-12 rounded-[2.5rem] border border-zinc-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 mb-8 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-zinc-100 text-zinc-600 flex items-center justify-center border border-zinc-200">
-              <Search className="w-6 h-6" />
-            </div>
-            Proyectos Activos
-          </h2>
-          
-          <div className="space-y-4">
-            {Object.values(orders).reverse().map((order: any) => (
-              <div key={order.id} className="p-6 border border-zinc-100 rounded-2xl bg-zinc-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 hover:shadow-md transition-shadow">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-xs font-black tracking-widest uppercase text-cyan-600 bg-cyan-50 px-3 py-1.5 rounded-lg border border-cyan-100">#{order.id}</span>
-                    <h3 className="font-extrabold text-lg text-zinc-900">{order.projectName}</h3>
-                  </div>
-                  <p className="text-base text-zinc-500 font-medium">Cliente: <span className="text-zinc-700">{order.customerName}</span></p>
+        <div className="bg-white p-8 sm:p-12 rounded-[2.5rem] border border-zinc-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-zinc-100">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-100 text-zinc-700 flex items-center justify-center border border-zinc-200">
+                  <Search className="w-6 h-6" />
                 </div>
-                
-                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                  <select 
-                    value={order.status}
-                    onChange={e => updateOrderStatus(order.id, e.target.value as OrderStatus)}
-                    className={`w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-bold border-2 transition-colors cursor-pointer ${
-                      order.status === 'Cotizado' || order.status === 'COTIZADO' ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
-                      order.status === 'Pendiente por impresión' ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' :
-                      order.status === 'En proceso de impresión' || order.status === 'EN PROCESO' ? 'bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100' :
-                      order.status === 'En proceso de troquelado' ? 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200 hover:bg-fuchsia-100' :
-                      order.status === 'Terminado' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100' :
-                      'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                Proyectos por Fase ({Object.keys(orders).length})
+              </h2>
+              <p className="text-sm text-zinc-500 font-medium mt-1">
+                Haz clic en cualquier fase para filtrar y gestionar las órdenes en ese estado.
+              </p>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar por código, cliente..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-400 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Phase Filter Buttons */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 no-scrollbar">
+            {phaseOptions.map((phase) => {
+              const count = getPhaseCount(phase.value);
+              const isActive = selectedPhase === phase.value;
+
+              return (
+                <button
+                  key={phase.value}
+                  onClick={() => setSelectedPhase(phase.value)}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap shrink-0 border ${
+                    isActive
+                      ? `${phase.activeBg} border-transparent`
+                      : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  }`}
+                >
+                  <span>{phase.label}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                      isActive ? 'bg-white/20 text-white' : phase.badgeBg
                     }`}
                   >
-                    <option value="Cotizado">Cotizado</option>
-                    <option value="Pendiente por impresión">Pendiente por impresión</option>
-                    <option value="En proceso de impresión">En proceso de impresión</option>
-                    <option value="En proceso de troquelado">En proceso de troquelado</option>
-                    <option value="Terminado">Terminado</option>
-                    <option value="Despachado">Despachado</option>
-                  </select>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Orders List Container */}
+          <div className="space-y-4">
+            {filteredOrdersList.map((order: any) => (
+              <div
+                key={order.id}
+                className="p-6 border border-zinc-200/70 rounded-2xl bg-zinc-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 hover:bg-white hover:shadow-lg hover:border-zinc-300 transition-all"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center flex-wrap gap-3">
+                    <span className="text-xs font-black tracking-widest uppercase text-cyan-700 bg-cyan-50 px-3 py-1.5 rounded-lg border border-cyan-200/60 shadow-xs">
+                      #{order.id}
+                    </span>
+                    <h3 className="font-extrabold text-lg text-zinc-900">{order.projectName}</h3>
+                  </div>
+                  <p className="text-sm text-zinc-500 font-medium">
+                    Cliente: <span className="text-zinc-800 font-semibold">{order.customerName}</span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
+                      Fase Actual:
+                    </span>
+                    <select
+                      value={order.status}
+                      onChange={(e) => updateOrderStatus(order.id, e.target.value as OrderStatus)}
+                      className={`w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-bold border-2 transition-all cursor-pointer shadow-xs focus:outline-none focus:ring-2 focus:ring-cyan-500 ${
+                        order.status === 'Cotizado' || order.status === 'COTIZADO'
+                          ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                          : order.status === 'Pendiente por impresión'
+                          ? 'bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100'
+                          : order.status === 'En proceso de impresión' || order.status === 'EN PROCESO'
+                          ? 'bg-cyan-50 text-cyan-800 border-cyan-300 hover:bg-cyan-100'
+                          : order.status === 'En proceso de troquelado'
+                          ? 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-300 hover:bg-fuchsia-100'
+                          : order.status === 'Terminado'
+                          ? 'bg-indigo-50 text-indigo-800 border-indigo-300 hover:bg-indigo-100'
+                          : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                      }`}
+                    >
+                      <option value="Cotizado">Cotizado</option>
+                      <option value="Pendiente por impresión">Pendiente por impresión</option>
+                      <option value="En proceso de impresión">En proceso de impresión</option>
+                      <option value="En proceso de troquelado">En proceso de troquelado</option>
+                      <option value="Terminado">Terminado</option>
+                      <option value="Despachado">Despachado</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             ))}
-            
+
+            {filteredOrdersList.length === 0 && Object.keys(orders).length > 0 && (
+              <div className="text-center py-16 text-zinc-400 font-medium bg-zinc-50 rounded-2xl border border-dashed border-zinc-200 space-y-2">
+                <p className="text-zinc-600 font-bold text-base">No hay órdenes en la fase "{selectedPhase}"</p>
+                {searchQuery && <p className="text-xs text-zinc-400">Prueba eliminando el filtro de búsqueda "{searchQuery}"</p>}
+              </div>
+            )}
+
             {Object.keys(orders).length === 0 && (
               <div className="text-center py-16 text-zinc-400 font-medium bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
                 Aún no hay proyectos registrados en el sistema.

@@ -147,7 +147,15 @@ export const CostsTab: React.FC<CostsTabProps> = ({ costs, setCosts, dailyEstM2,
             {editingId ? 'Editar Costo' : 'Registrar Concepto de Costo'}
           </h3>
 
-          <form onSubmit={handleSave} className="space-y-6">
+          <form 
+            onSubmit={handleSave} 
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+                e.preventDefault();
+              }
+            }} 
+            className="space-y-6"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">

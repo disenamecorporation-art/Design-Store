@@ -2,27 +2,34 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Layers, RotateCw, Settings, Target, RefreshCw } from 'lucide-react';
 
 export const CutCalculatorView: React.FC = () => {
-  const [sheetWidth, setSheetWidth] = useState<number>(100);
-  const [sheetHeight, setSheetHeight] = useState<number>(100);
-  const [stickerWidth, setStickerWidth] = useState<number>(10);
-  const [stickerHeight, setStickerHeight] = useState<number>(10);
+  const [sheetWidth, setSheetWidth] = useState<number | ''>(100);
+  const [sheetHeight, setSheetHeight] = useState<number | ''>(100);
+  const [stickerWidth, setStickerWidth] = useState<number | ''>(10);
+  const [stickerHeight, setStickerHeight] = useState<number | ''>(10);
   const [targetQuantity, setTargetQuantity] = useState<number | ''>('');
   
   const [forceOrientation, setForceOrientation] = useState<'auto' | 'horizontal' | 'vertical'>('auto');
-  const [margin, setMargin] = useState<number>(0);
-  const [bleed, setBleed] = useState<number>(0);
+  const [margin, setMargin] = useState<number | ''>(0);
+  const [bleed, setBleed] = useState<number | ''>(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Calculate best layout
   const calculateLayout = () => {
-    const sw = sheetWidth - (margin * 2);
-    const sh = sheetHeight - (margin * 2);
-    const w = stickerWidth + (bleed * 2);
-    const h = stickerHeight + (bleed * 2);
+    const swNum = Number(sheetWidth) || 0;
+    const shNum = Number(sheetHeight) || 0;
+    const stWNum = Number(stickerWidth) || 0;
+    const stHNum = Number(stickerHeight) || 0;
+    const mNum = Number(margin) || 0;
+    const bNum = Number(bleed) || 0;
+
+    const sw = swNum - (mNum * 2);
+    const sh = shNum - (mNum * 2);
+    const w = stWNum + (bNum * 2);
+    const h = stHNum + (bNum * 2);
     
-    if (w <= 0 || h <= 0 || sw <= 0 || sh <= 0) {
-      return { count: 0, cols: 0, rows: 0, orientation: 'none', usedArea: 0, w, h, sw, sh };
+    if (w <= 0 || h <= 0 || sw <= 0 || sh <= 0 || !isFinite(sw) || !isFinite(sh) || !isFinite(w) || !isFinite(h)) {
+      return { count: 0, cols: 0, rows: 0, orientation: 'none', efficiency: 0, w: 0, h: 0, sw: 0, sh: 0 };
     }
 
     // Horizontal arrangement (Normal)
@@ -50,11 +57,11 @@ export const CutCalculatorView: React.FC = () => {
     }
 
     const stickerArea = w * h;
-    const totalArea = sheetWidth * sheetHeight;
+    const totalArea = swNum * shNum;
     const usedArea = (count * stickerArea);
     const efficiency = totalArea > 0 ? (usedArea / totalArea) * 100 : 0;
 
-    return { count, cols, rows, orientation, efficiency, w, h, sw, sh };
+    return { count, cols, rows, orientation, efficiency: isNaN(efficiency) ? 0 : efficiency, w, h, sw, sh };
   };
 
   const layout = calculateLayout();
@@ -77,16 +84,23 @@ export const CutCalculatorView: React.FC = () => {
     // Clear
     ctx.clearRect(0, 0, cw, ch);
 
-    if (layout.count === 0) return;
+    const sWidth = Number(sheetWidth) || 0;
+    const sHeight = Number(sheetHeight) || 0;
+    const mVal = Number(margin) || 0;
+    const bVal = Number(bleed) || 0;
+
+    if (layout.count === 0 || sWidth <= 0 || sHeight <= 0 || !isFinite(sWidth) || !isFinite(sHeight)) return;
 
     // Calculate scale to fit the sheet in canvas
     const padding = 40;
     const availW = cw - padding * 2;
     const availH = ch - padding * 2;
-    const scale = Math.min(availW / sheetWidth, availH / sheetHeight);
+    const scale = Math.min(availW / sWidth, availH / sHeight);
 
-    const drawW = sheetWidth * scale;
-    const drawH = sheetHeight * scale;
+    if (!isFinite(scale) || scale <= 0 || isNaN(scale)) return;
+
+    const drawW = sWidth * scale;
+    const drawH = sHeight * scale;
     const offsetX = (cw - drawW) / 2;
     const offsetY = (ch - drawH) / 2;
 
@@ -99,14 +113,14 @@ export const CutCalculatorView: React.FC = () => {
     ctx.shadowColor = 'transparent';
 
     // Draw Margin
-    if (margin > 0) {
+    if (mVal > 0) {
       ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)'; // rose-500
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(
-        offsetX + margin * scale, 
-        offsetY + margin * scale, 
-        (sheetWidth - margin * 2) * scale, 
-        (sheetHeight - margin * 2) * scale
+        offsetX + mVal * scale, 
+        offsetY + mVal * scale, 
+        (sWidth - mVal * 2) * scale, 
+        (sHeight - mVal * 2) * scale
       );
       ctx.setLineDash([]);
     }
@@ -115,8 +129,8 @@ export const CutCalculatorView: React.FC = () => {
     const stickerDrawW = (layout.orientation === 'horizontal' ? layout.w : layout.h) * scale;
     const stickerDrawH = (layout.orientation === 'horizontal' ? layout.h : layout.w) * scale;
 
-    const startX = offsetX + margin * scale;
-    const startY = offsetY + margin * scale;
+    const startX = offsetX + mVal * scale;
+    const startY = offsetY + mVal * scale;
 
     for (let r = 0; r < layout.rows; r++) {
       for (let c = 0; c < layout.cols; c++) {
@@ -132,14 +146,14 @@ export const CutCalculatorView: React.FC = () => {
         ctx.strokeRect(x + 1, y + 1, stickerDrawW - 2, stickerDrawH - 2);
 
         // Draw inner actual sticker without bleed
-        if (bleed > 0) {
+        if (bVal > 0) {
           ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
           ctx.setLineDash([2, 2]);
           ctx.strokeRect(
-            x + 1 + (bleed * scale), 
-            y + 1 + (bleed * scale), 
-            stickerDrawW - 2 - (bleed * 2 * scale), 
-            stickerDrawH - 2 - (bleed * 2 * scale)
+            x + 1 + (bVal * scale), 
+            y + 1 + (bVal * scale), 
+            stickerDrawW - 2 - (bVal * 2 * scale), 
+            stickerDrawH - 2 - (bVal * 2 * scale)
           );
           ctx.setLineDash([]);
         }
@@ -152,13 +166,13 @@ export const CutCalculatorView: React.FC = () => {
     ctx.textAlign = 'center';
     
     // Width annotation
-    ctx.fillText(`${sheetWidth}cm`, offsetX + drawW / 2, offsetY - 10);
+    ctx.fillText(`${sWidth}cm`, offsetX + drawW / 2, offsetY - 10);
     
     // Height annotation
     ctx.save();
     ctx.translate(offsetX - 15, offsetY + drawH / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText(`${sheetHeight}cm`, 0, 0);
+    ctx.fillText(`${sHeight}cm`, 0, 0);
     ctx.restore();
 
   }, [sheetWidth, sheetHeight, stickerWidth, stickerHeight, margin, bleed, forceOrientation, layout]);
@@ -209,16 +223,16 @@ export const CutCalculatorView: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Ancho (cm)</label>
-                <input type="number" value={sheetWidth} onChange={e => setSheetWidth(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-white placeholder:text-zinc-600" />
+                <input type="number" value={sheetWidth} onChange={e => setSheetWidth(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-white placeholder:text-zinc-600" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Alto (cm)</label>
-                <input type="number" value={sheetHeight} onChange={e => setSheetHeight(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-white placeholder:text-zinc-600" />
+                <input type="number" value={sheetHeight} onChange={e => setSheetHeight(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-white placeholder:text-zinc-600" />
               </div>
             </div>
             <div className="space-y-1.5 pt-2 border-t border-white/5">
               <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Margen (cm)</label>
-              <input type="number" step="0.1" value={margin} onChange={e => setMargin(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-white placeholder:text-zinc-600" />
+              <input type="number" step="0.1" value={margin} onChange={e => setMargin(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-white placeholder:text-zinc-600" />
             </div>
           </div>
 
@@ -230,17 +244,17 @@ export const CutCalculatorView: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Ancho (cm)</label>
-                <input type="number" value={stickerWidth} onChange={e => setStickerWidth(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all text-white placeholder:text-zinc-600" />
+                <input type="number" value={stickerWidth} onChange={e => setStickerWidth(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all text-white placeholder:text-zinc-600" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Alto (cm)</label>
-                <input type="number" value={stickerHeight} onChange={e => setStickerHeight(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all text-white placeholder:text-zinc-600" />
+                <input type="number" value={stickerHeight} onChange={e => setStickerHeight(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all text-white placeholder:text-zinc-600" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/5">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Sangrado (cm)</label>
-                <input type="number" step="0.1" value={bleed} onChange={e => setBleed(Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all text-white placeholder:text-zinc-600" />
+                <input type="number" step="0.1" value={bleed} onChange={e => setBleed(e.target.value === '' ? '' : Number(e.target.value))} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all text-white placeholder:text-zinc-600" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Objetivo</label>

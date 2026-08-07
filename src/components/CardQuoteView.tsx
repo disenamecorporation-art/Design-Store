@@ -222,7 +222,15 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
 
         {/* Quotation Form Section */}
         <div className="glass-card rounded-3xl p-6 sm:p-12 border border-zinc-200 shadow-xl max-w-4xl mx-auto">
-          <form onSubmit={handleWhatsAppSend} className="space-y-8">
+          <form 
+            onSubmit={handleWhatsAppSend} 
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.target as HTMLElement).tagName === 'INPUT') {
+                e.preventDefault();
+              }
+            }} 
+            className="space-y-8"
+          >
             <div className="border-b border-zinc-200 pb-4">
               <h2 className="text-xl font-bold text-zinc-900">Detalles de la Cotización</h2>
               <p className="text-xs text-zinc-500">Complete los campos obligatorios para generar su mensaje de pedido por WhatsApp.</p>

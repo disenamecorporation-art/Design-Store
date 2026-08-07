@@ -28,14 +28,29 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ setActiveTab }) => {
   };
 
   const getServiceImages = (service: ServiceItem) => {
-    if (service.id === 'gigantografia') {
+    if (service.id === 'gigantografia' || service.id === 'flexografia-digital') {
       return [
         'https://i.postimg.cc/xd1W4Xyn/Whats-App-Image-2026-07-30-at-23-13-33.jpg',
         'https://i.postimg.cc/6QpDm8LJ/Whats-App-Image-2026-07-30-at-23-13-33-(1).jpg',
         'https://i.postimg.cc/k5gkp2FC/Whats-App-Image-2026-07-30-at-23-13-33-(2).jpg',
         'https://i.postimg.cc/wBjSG1cd/Whats-App-Image-2026-07-30-at-23-13-33-(3).jpg',
         'https://i.postimg.cc/xd1W4XyV/Whats-App-Image-2026-07-30-at-23-13-34.jpg',
-        'https://i.postimg.cc/g02fTxq9/Whats-App-Image-2026-07-30-at-23-13-34-(1).jpg'
+        'https://i.postimg.cc/g02fTxq9/Whats-App-Image-2026-07-30-at-23-13-34-(1).jpg',
+        'https://i.postimg.cc/MGNqJkLp/Whats-App-Image-2026-08-01-at-19-38-04-(3).jpg',
+        'https://i.postimg.cc/XYD09S4w/Whats-App-Image-2026-08-01-at-19-36-02.jpg',
+        'https://i.postimg.cc/mg6G7fB1/Whats-App-Image-2026-08-01-at-19-36-32.jpg',
+        'https://i.postimg.cc/Cx6VbTSB/Whats-App-Image-2026-08-01-at-19-36-32-(1).jpg',
+        'https://i.postimg.cc/vZSd5Fbm/Whats-App-Image-2026-08-01-at-19-36-32-(2).jpg',
+        'https://i.postimg.cc/9QNjy5CM/Whats-App-Image-2026-08-01-at-19-36-32-(3).jpg',
+        'https://i.postimg.cc/g2BP3Fmm/Whats-App-Image-2026-08-01-at-19-36-32-(4).jpg',
+        'https://i.postimg.cc/W1fP0LTj/Whats-App-Image-2026-08-01-at-19-38-02.jpg',
+        'https://i.postimg.cc/52tVHNd6/Whats-App-Image-2026-08-01-at-19-38-02-(1).jpg',
+        'https://i.postimg.cc/qv7TtMVp/Whats-App-Image-2026-08-01-at-19-38-03.jpg',
+        'https://i.postimg.cc/Bnv08Q9s/Whats-App-Image-2026-08-01-at-19-38-03-(1).jpg',
+        'https://i.postimg.cc/fRbN3Tnh/Whats-App-Image-2026-08-01-at-19-38-03-(2).jpg',
+        'https://i.postimg.cc/vZms1HFF/Whats-App-Image-2026-08-01-at-19-38-04.jpg',
+        'https://i.postimg.cc/13zQg5hx/Whats-App-Image-2026-08-01-at-19-38-04-(1).jpg',
+        'https://i.postimg.cc/SxKhXN0w/Whats-App-Image-2026-08-01-at-19-38-04-(2).jpg'
       ];
     }
     if (service.id === 'impresion-3d') {
@@ -150,13 +165,7 @@ export const ServicesView: React.FC<ServicesViewProps> = ({ setActiveTab }) => {
                 {/* Action buttons */}
                 <div className="pt-6 border-t border-zinc-200 flex flex-wrap items-center gap-4">
                   <button
-                    onClick={() => {
-                      if (service.id === 'gigantografia' || service.id === 'flexografia-digital') {
-                        setActiveTab('cotizar');
-                      } else {
-                        handleWhatsAppForService(service.title);
-                      }
-                    }}
+                    onClick={() => handleWhatsAppForService(service.title)}
                     className="px-6 py-3.5 rounded-full bg-black text-white font-semibold text-sm hover:bg-zinc-800 transition-all shadow-md flex items-center gap-2 group"
                   >
                     <span>Solicitar Cotización</span>
