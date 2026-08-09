@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TabType } from '../types';
-import { Menu, X, ArrowRight, Phone, Sparkles, Search, Instagram, Facebook, Twitter, User, LogOut, Settings } from 'lucide-react';
+import { Menu, X, ArrowRight, Phone, Sparkles, Search, Instagram, Facebook, Twitter, User, LogOut, Settings, Layers } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useCart } from '../hooks/useCart';
 import { ShoppingBag } from 'lucide-react';
@@ -112,6 +112,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
             Servicios
           </button>
           <button
+            onClick={() => handleNav('portafolio')}
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+              activeTab === 'portafolio'
+                ? 'bg-black text-white shadow-md scale-100'
+                : 'text-zinc-800 hover:text-black hover:bg-black/10'
+            }`}
+          >
+            Portafolio
+          </button>
+          <button
             onClick={() => handleNav('store')}
             className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
               activeTab === 'store'
@@ -205,6 +215,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                       >
                         <Sparkles className="w-4 h-4 text-amber-500" />
                         Admin Panel #3 (Taller)
+                      </button>
+                      <button
+                        onClick={() => { handleNav('admin-p4'); setUserMenuOpen(false); }}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                          activeTab === 'admin-p4' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                        }`}
+                      >
+                        <Layers className="w-4 h-4 text-amber-600" />
+                        Admin Panel #4 (Portafolio)
                       </button></>)}
                       <button
                         onClick={() => { handleNav('cuenta'); setUserMenuOpen(false); }}
@@ -335,6 +354,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               Catálogo de Servicios
             </button>
             <button
+              onClick={() => handleNav('portafolio')}
+              className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors ${
+                activeTab === 'portafolio' ? 'bg-black text-white' : 'text-zinc-800 hover:bg-zinc-100'
+              }`}
+            >
+              Portafolio de Servicios
+            </button>
+            <button
               onClick={() => handleNav('store')}
               className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors ${
                 activeTab === 'store' ? 'bg-black text-white' : 'text-zinc-800 hover:bg-zinc-100'
@@ -388,6 +415,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                   >
                     <Sparkles className="w-4 h-4 text-amber-500" />
                     Admin Panel #3 (Taller)
+                  </button>
+                  <button
+                    onClick={() => handleNav('admin-p4')}
+                    className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors flex items-center gap-2 ${
+                      activeTab === 'admin-p4' ? 'bg-amber-600 text-white' : 'text-zinc-800 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <Layers className="w-4 h-4 text-amber-500" />
+                    Admin Panel #4 (Portafolio)
                   </button>
                   </>
                 )}

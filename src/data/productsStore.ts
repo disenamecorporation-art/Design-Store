@@ -11,7 +11,8 @@ export const storeAPI = {
       
       return data.map(item => ({
         ...item,
-        price: Number(item.price)
+        price: Number(item.price),
+        pointsPrice: item.points_price !== undefined && item.points_price !== null ? Number(item.points_price) : undefined
       }));
     } catch (err) {
       console.error('Error fetching products from Supabase:', err);
@@ -49,6 +50,7 @@ export const storeAPI = {
           name: p.name,
           description: p.description,
           price: p.price,
+          points_price: p.pointsPrice || 0,
           category: p.category,
           image: p.image,
           tags: p.tags

@@ -11,7 +11,11 @@ export const AdminView: React.FC = () => {
   // Form states
   const [newOrderId, setNewOrderId] = useState('');
   const [newCustomerName, setNewCustomerName] = useState('');
+  const [newCustomerEmail, setNewCustomerEmail] = useState('');
   const [newProjectName, setNewProjectName] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'USD' | 'Puntos Design'>('USD');
+  const [newTotalAmount, setNewTotalAmount] = useState<string>('50');
+  const [newPointsUsed, setNewPointsUsed] = useState<string>('500');
   const [newStatus, setNewStatus] = useState<OrderStatus>('Cotizado');
   
   const [successMsg, setSuccessMsg] = useState('');
@@ -55,6 +59,7 @@ export const AdminView: React.FC = () => {
     const matchesSearch = !q || 
       order.id.toLowerCase().includes(q) || 
       order.customerName.toLowerCase().includes(q) || 
+      (order.customerEmail && order.customerEmail.toLowerCase().includes(q)) ||
       order.projectName.toLowerCase().includes(q);
     return matchesPhase && matchesSearch;
   });
@@ -84,7 +89,12 @@ export const AdminView: React.FC = () => {
           id: order.id,
           status: order.status,
           customerName: order.customer_name,
+          customerEmail: order.customer_email || '',
           projectName: order.project_name,
+          totalAmount: Number(order.total_amount || 0),
+          pointsUsed: Number(order.points_used || 0),
+          paymentMethod: order.payment_method || (Number(order.points_used || 0) > 0 ? 'Puntos Design' : 'USD'),
+          pointsAwarded: Boolean(order.points_awarded),
           createdAt: order.created_at,
           updatedAt: order.updated_at,
         };
@@ -110,44 +120,185 @@ export const AdminView: React.FC = () => {
     e.preventDefault();
     if (!newOrderId.trim() || !newCustomerName.trim() || !newProjectName.trim()) return;
 
+    const numericAmount = paymentMethod === 'USD' ? Math.max(0, Number(newTotalAmount) || 0) : 0;
+    const numericPointsUsed = paymentMethod === 'Puntos Design' ? Math.max(0, Number(newPointsUsed) || 0) : 0;
+
     const newOrder = {
       id: newOrderId.trim(),
       status: newStatus,
       customer_name: newCustomerName.trim(),
+      customer_email: newCustomerEmail.trim(),
       project_name: newProjectName.trim(),
+      total_amount: numericAmount,
+      points_used: numericPointsUsed,
+      payment_method: paymentMethod,
+      points_awarded: false
     };
 
     const { error } = await supabase.from('orders').insert([newOrder]);
     
-    // In a real app we might rely on realtime or fetchOrders() but since realtime is on, it will update.
     if (error) {
       console.error(error);
       alert('Error: No se pudo crear la orden. ' + error.message);
       return;
     }
+
+    // If initial status is Despachado, trigger points processing
+    if (newStatus === 'Despachado') {
+      if (paymentMethod === 'Puntos Design' && numericPointsUsed > 0) {
+        await deductPointsForOrder(newOrder.id, newOrder.customer_email, newOrder.customer_name, numericPointsUsed);
+      } else if (numericAmount > 0) {
+        await awardPointsForOrder(newOrder.id, newOrder.customer_email, newOrder.customer_name, numericAmount);
+      }
+    }
     
     setNewOrderId('');
     setNewCustomerName('');
+    setNewCustomerEmail('');
     setNewProjectName('');
+    setNewTotalAmount('50');
+    setNewPointsUsed('500');
     setNewStatus('Cotizado');
     
-    setSuccessMsg(`Orden #${newOrder.id} creada correctamente.`);
-    setTimeout(() => setSuccessMsg(''), 3000);
+    setSuccessMsg(`Orden #${newOrder.id} creada correctamente (${paymentMethod === 'USD' ? `$${numericAmount} USD` : `${numericPointsUsed} Puntos Design`}).`);
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  const deductPointsForOrder = async (orderId: string, email: string, customerName: string, pointsToDeduct: number) => {
+    if (pointsToDeduct <= 0) return;
+
+    try {
+      let foundUser = null;
+
+      if (email) {
+        const { data } = await supabase.from('profiles').select('*').ilike('email', email.trim()).maybeSingle();
+        if (data) foundUser = data;
+      }
+
+      if (!foundUser && customerName) {
+        const { data } = await supabase.from('profiles').select('*').ilike('name', customerName.trim()).maybeSingle();
+        if (data) foundUser = data;
+      }
+
+      if (foundUser) {
+        const currentPoints = foundUser.points || 0;
+        const newPoints = Math.max(0, currentPoints - pointsToDeduct);
+        let newTier = 'Standard';
+        if (newPoints >= 5000) newTier = 'Diamante Elite';
+        else if (newPoints >= 2500) newTier = 'Platino Pro';
+        else if (newPoints >= 1000) newTier = 'Oro Pro';
+        else if (newPoints >= 500) newTier = 'Plata';
+
+        await supabase.from('profiles').update({
+          points: newPoints,
+          tier: newTier
+        }).eq('id', foundUser.id);
+
+        await supabase.from('orders').update({
+          points_awarded: true
+        }).eq('id', orderId);
+
+        setSuccessMsg(`🔻 ¡PUNTOS DESCONTADOS! Se descontaron -${pointsToDeduct} Puntos Design a ${foundUser.name}. Nuevo Saldo: ${newPoints} pts.`);
+        setTimeout(() => setSuccessMsg(''), 7000);
+      } else {
+        await supabase.from('orders').update({
+          points_awarded: true
+        }).eq('id', orderId);
+
+        setSuccessMsg(`Orden despachada (${pointsToDeduct} pts). No se encontró el usuario "${email || customerName}" para descontar puntos.`);
+        setTimeout(() => setSuccessMsg(''), 7000);
+      }
+    } catch (e) {
+      console.error('Error descontando puntos:', e);
+    }
+  };
+
+  const awardPointsForOrder = async (orderId: string, email: string, customerName: string, amountUSD: number) => {
+    const pointsToEarn = Math.floor(amountUSD);
+    if (pointsToEarn <= 0) return;
+
+    try {
+      let foundUser = null;
+
+      if (email) {
+        const { data } = await supabase.from('profiles').select('*').ilike('email', email.trim()).maybeSingle();
+        if (data) foundUser = data;
+      }
+
+      if (!foundUser && customerName) {
+        const { data } = await supabase.from('profiles').select('*').ilike('name', customerName.trim()).maybeSingle();
+        if (data) foundUser = data;
+      }
+
+      if (foundUser) {
+        const currentPoints = foundUser.points || 0;
+        const newPoints = currentPoints + pointsToEarn;
+        let newTier = 'Standard';
+        if (newPoints >= 5000) newTier = 'Diamante Elite';
+        else if (newPoints >= 2500) newTier = 'Platino Pro';
+        else if (newPoints >= 1000) newTier = 'Oro Pro';
+        else if (newPoints >= 500) newTier = 'Plata';
+
+        await supabase.from('profiles').update({
+          points: newPoints,
+          tier: newTier
+        }).eq('id', foundUser.id);
+
+        await supabase.from('orders').update({
+          points_awarded: true
+        }).eq('id', orderId);
+
+        setSuccessMsg(`🎉 ¡PUNTOS ACREDITADOS! Se asignaron +${pointsToEarn} Puntos Design a ${foundUser.name} (${foundUser.email}). Nuevo Saldo: ${newPoints} pts.`);
+        setTimeout(() => setSuccessMsg(''), 7000);
+      } else {
+        await supabase.from('orders').update({
+          points_awarded: true
+        }).eq('id', orderId);
+
+        setSuccessMsg(`Orden despachada ($${amountUSD} USD). No se encontró un usuario registrado con el correo/nombre "${email || customerName}". Se acreditarán al vincular la cuenta.`);
+        setTimeout(() => setSuccessMsg(''), 7000);
+      }
+    } catch (e) {
+      console.error('Error acreditando puntos:', e);
+    }
   };
 
   const updateOrderStatus = async (id: string, status: OrderStatus) => {
-    const previousStatus = orders[id]?.status;
+    const targetOrder = orders[id];
+    const previousStatus = targetOrder?.status;
+    const isDespachado = status === 'Despachado' || (status as string) === 'DESPACHADO';
+
     // optimistic update
-    const updatedOrder = { ...orders[id], status, updatedAt: new Date().toISOString() };
+    const updatedOrder: Order = { 
+      ...targetOrder, 
+      status, 
+      updatedAt: new Date().toISOString() 
+    };
     setOrders({ ...orders, [id]: updatedOrder });
     
-    const { error } = await supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+    const { error } = await supabase.from('orders').update({ 
+      status, 
+      updated_at: new Date().toISOString() 
+    }).eq('id', id);
+
     if (error) {
       console.error('Error actualizando estado en Supabase:', error);
-      alert(`No se pudo actualizar el estado en Supabase (${error.message}). Recuerda ejecutar la actualización de la tabla en el Editor SQL de Supabase.`);
-      // revert local state
+      alert(`No se pudo actualizar el estado en Supabase (${error.message}).`);
       if (previousStatus) {
         setOrders({ ...orders, [id]: { ...orders[id], status: previousStatus } });
+      }
+      return;
+    }
+
+    // Auto Award or Deduct Puntos Design if status is Despachado
+    if (isDespachado && targetOrder && !targetOrder.pointsAwarded) {
+      if (targetOrder.paymentMethod === 'Puntos Design' || (targetOrder.pointsUsed && targetOrder.pointsUsed > 0)) {
+        await deductPointsForOrder(id, targetOrder.customerEmail || '', targetOrder.customerName, targetOrder.pointsUsed || 0);
+      } else {
+        const amount = targetOrder.totalAmount || 0;
+        if (amount > 0) {
+          await awardPointsForOrder(id, targetOrder.customerEmail || '', targetOrder.customerName, amount);
+        }
       }
     }
   };
@@ -222,6 +373,85 @@ export const AdminView: React.FC = () => {
                   required
                 />
               </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Correo del Cliente</span>
+                  <span className="text-[10px] text-amber-600 font-extrabold lowercase">✨ Vincular Puntos Design</span>
+                </label>
+                <input 
+                  type="email" 
+                  value={newCustomerEmail} 
+                  onChange={e => setNewCustomerEmail(e.target.value)}
+                  placeholder="Ej. cliente@correo.com"
+                  className="w-full px-5 py-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-base font-medium focus:bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-400 transition-all"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tipo de Pago / Operación</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('USD')}
+                    className={`py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+                      paymentMethod === 'USD'
+                        ? 'bg-zinc-900 text-white border-zinc-900 shadow-sm'
+                        : 'bg-zinc-50 text-zinc-600 border-zinc-200 hover:bg-zinc-100'
+                    }`}
+                  >
+                    💵 Compra USD (Suma Puntos)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('Puntos Design')}
+                    className={`py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
+                      paymentMethod === 'Puntos Design'
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                        : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                    }`}
+                  >
+                    ✨ Canje de Puntos (Resta Puntos)
+                  </button>
+                </div>
+              </div>
+
+              {paymentMethod === 'USD' ? (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>Monto de la Orden ($ USD)</span>
+                    <span className="text-[10px] text-emerald-600 font-extrabold">+1 Punto x $1 USD</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    min="0"
+                    step="any"
+                    value={newTotalAmount} 
+                    onChange={e => setNewTotalAmount(e.target.value)}
+                    placeholder="Ej. 150"
+                    className="w-full px-5 py-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-base font-extrabold text-zinc-900 focus:bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-400 transition-all"
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>Puntos Design a Descontar</span>
+                    <span className="text-[10px] text-amber-600 font-extrabold">-Se descuenta al Despachar</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    step="1"
+                    value={newPointsUsed} 
+                    onChange={e => setNewPointsUsed(e.target.value)}
+                    placeholder="Ej. 500"
+                    className="w-full px-5 py-4 bg-amber-50/50 border border-amber-200 rounded-2xl text-base font-extrabold text-amber-900 focus:bg-white focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 transition-all"
+                    required
+                  />
+                </div>
+              )}
+
               <div className="space-y-2 md:col-span-2">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Descripción del Proyecto</label>
                 <input 
@@ -233,6 +463,7 @@ export const AdminView: React.FC = () => {
                   required
                 />
               </div>
+
               <div className="space-y-2 md:col-span-2">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Fase Inicial del Proyecto</label>
                 <select 
@@ -245,7 +476,7 @@ export const AdminView: React.FC = () => {
                   <option value="En proceso de impresión">Fase 3: En proceso de impresión</option>
                   <option value="En proceso de troquelado">Fase 4: En proceso de troquelado</option>
                   <option value="Terminado">Fase 5: Terminado</option>
-                  <option value="Despachado">Fase 6: Despachado</option>
+                  <option value="Despachado">Fase 6: Despachado (Acredita Puntos Automáticamente)</option>
                 </select>
               </div>
             </div>
@@ -254,9 +485,9 @@ export const AdminView: React.FC = () => {
               Generar Proyecto y Código de Tracking
             </button>
             {successMsg && (
-              <div className="p-4 bg-emerald-50 text-emerald-700 text-sm font-semibold rounded-2xl flex items-center justify-center gap-2 border border-emerald-100">
-                <CheckCircle2 className="w-5 h-5" />
-                {successMsg}
+              <div className="p-4 bg-emerald-50 text-emerald-800 text-sm font-semibold rounded-2xl flex items-center justify-center gap-2 border border-emerald-200 shadow-xs">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>{successMsg}</span>
               </div>
             )}
           </form>
@@ -326,16 +557,51 @@ export const AdminView: React.FC = () => {
                 key={order.id}
                 className="p-6 border border-zinc-200/70 rounded-2xl bg-zinc-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 hover:bg-white hover:shadow-lg hover:border-zinc-300 transition-all"
               >
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-center flex-wrap gap-3">
                     <span className="text-xs font-black tracking-widest uppercase text-cyan-700 bg-cyan-50 px-3 py-1.5 rounded-lg border border-cyan-200/60 shadow-xs">
                       #{order.id}
                     </span>
                     <h3 className="font-extrabold text-lg text-zinc-900">{order.projectName}</h3>
+                    {order.paymentMethod === 'Puntos Design' || (order.pointsUsed && order.pointsUsed > 0) ? (
+                      <span className="text-xs font-black px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                        ✨ {order.pointsUsed || 0} Puntos Design
+                      </span>
+                    ) : (
+                      <span className="text-xs font-extrabold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ${order.totalAmount || 0} USD
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm text-zinc-500 font-medium">
-                    Cliente: <span className="text-zinc-800 font-semibold">{order.customerName}</span>
-                  </p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-500 font-medium">
+                    <p>Cliente: <span className="text-zinc-800 font-semibold">{order.customerName}</span></p>
+                    {order.customerEmail && (
+                      <p className="text-xs text-zinc-400">({order.customerEmail})</p>
+                    )}
+                  </div>
+                  <div className="pt-1">
+                    {order.paymentMethod === 'Puntos Design' || (order.pointsUsed && order.pointsUsed > 0) ? (
+                      order.pointsAwarded || order.status === 'Despachado' ? (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200">
+                          🔻 -{order.pointsUsed || 0} Puntos Design Descontados
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60">
+                          Descontará -{order.pointsUsed || 0} pts al pasar a Despachado
+                        </span>
+                      )
+                    ) : (
+                      order.pointsAwarded || order.status === 'Despachado' ? (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
+                          ✨ +{Math.floor(order.totalAmount || 0)} Puntos Design Acreditados
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-md">
+                          Acreditará +{Math.floor(order.totalAmount || 0)} pts al pasar a Despachado
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">

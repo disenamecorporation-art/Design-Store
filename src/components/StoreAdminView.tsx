@@ -64,6 +64,7 @@ export const StoreAdminView: React.FC = () => {
       name: '',
       description: '',
       price: 0,
+      pointsPrice: 0,
       category: categories[0] || 'Todos',
       image: '',
       tags: []
@@ -140,7 +141,12 @@ export const StoreAdminView: React.FC = () => {
                   </div>
                   <div className="p-5 flex-1 flex flex-col">
                     <h4 className="font-bold text-zinc-900 line-clamp-1 mb-1">{product.name}</h4>
-                    <p className="text-xl font-black text-indigo-600 mb-4">${product.price.toFixed(2)}</p>
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      <span className="text-xl font-black text-indigo-600">${product.price.toFixed(2)} USD</span>
+                      <span className="text-xs font-black text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-lg">
+                        ✨ {product.pointsPrice || 0} Puntos Design
+                      </span>
+                    </div>
                     
                     <div className="mt-auto flex gap-2">
                       <button 
@@ -204,8 +210,16 @@ export const StoreAdminView: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Precio ($)</label>
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Precio en USD ($)</label>
                       <input required type="number" step="0.01" min="0" value={editingProduct.price} onChange={e => setEditingProduct({...editingProduct, price: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                        <span>Precio en Puntos Design</span>
+                        <span className="text-[10px] text-amber-600 font-extrabold">✨ Puntos</span>
+                      </label>
+                      <input type="number" min="0" step="1" value={editingProduct.pointsPrice ?? 0} onChange={e => setEditingProduct({...editingProduct, pointsPrice: parseInt(e.target.value) || 0})} placeholder="Ej. 150" className="w-full px-4 py-3 bg-amber-50/50 border border-amber-200/80 rounded-xl font-extrabold text-amber-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition-all" />
                     </div>
 
                     <div className="space-y-2">

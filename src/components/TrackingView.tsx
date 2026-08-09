@@ -35,7 +35,12 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
           id: data.id,
           status: data.status,
           customerName: data.customer_name,
+          customerEmail: data.customer_email || '',
           projectName: data.project_name,
+          totalAmount: Number(data.total_amount || 0),
+          pointsUsed: Number(data.points_used || 0),
+          paymentMethod: data.payment_method || (Number(data.points_used || 0) > 0 ? 'Puntos Design' : 'USD'),
+          pointsAwarded: Boolean(data.points_awarded),
           createdAt: data.created_at,
           updatedAt: data.updated_at
         });
@@ -146,7 +151,7 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
             className="bg-white rounded-[2.5rem] border border-zinc-200 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] p-8 sm:p-12 overflow-hidden relative"
           >
             {/* Status Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 relative z-10">
               <div>
                 <p className="text-sm font-bold text-cyan-600 tracking-widest uppercase mb-2">Orden #{order.id}</p>
                 <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900">{order.projectName}</h2>
@@ -157,6 +162,37 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
                 <span className="text-sm font-bold text-zinc-700">{order.status}</span>
               </div>
             </div>
+
+            {/* Puntos Design Banner */}
+            {(order.status === 'Despachado' || order.status === 'DESPACHADO' || order.pointsAwarded) && (
+              <div className="mb-10 p-5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-cyan-500/10 rounded-2xl border border-amber-200 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-lg shadow-sm">
+                    ✨
+                  </div>
+                  <div>
+                    {order.paymentMethod === 'Puntos Design' || (order.pointsUsed && order.pointsUsed > 0) ? (
+                      <>
+                        <h4 className="font-extrabold text-zinc-900 text-sm">¡Canje con Puntos Design Procesado!</h4>
+                        <p className="text-xs text-zinc-600 font-medium">
+                          Esta orden procesó un canje de <strong className="text-amber-800 font-bold">{order.pointsUsed || 0} Puntos Design</strong> al despacharse.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h4 className="font-extrabold text-zinc-900 text-sm">¡Puntos Design Acreditados!</h4>
+                        <p className="text-xs text-zinc-600 font-medium">
+                          Esta orden de <strong className="text-zinc-900">${order.totalAmount || 0} USD</strong> acreditó <strong className="text-amber-700 font-bold">+{Math.floor(order.totalAmount || 0)} Puntos Design</strong> a la cuenta del usuario.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <span className="hidden sm:inline-block px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-200">
+                  {order.paymentMethod === 'Puntos Design' ? 'Canje Procesado' : '1 USD = 1 Punto'}
+                </span>
+              </div>
+            )}
 
             {/* Progress Bar Area */}
             <div className="relative pt-8 pb-4 z-10">

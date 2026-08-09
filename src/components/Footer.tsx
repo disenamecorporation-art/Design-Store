@@ -81,6 +81,11 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               </button>
             </li>
             <li>
+              <button onClick={() => { setActiveTab('portafolio'); window.scrollTo(0,0); }} className="hover:text-white transition-colors font-bold text-amber-400">
+                Portafolio de Servicios
+              </button>
+            </li>
+            <li>
               <button onClick={() => { setActiveTab('cuenta'); window.scrollTo(0,0); }} className="hover:text-white transition-colors">
                 Área de Clientes
               </button>
@@ -152,6 +157,9 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
           </button>
           <button onClick={() => { setActiveTab('admin-p3'); window.scrollTo(0,0); }} className="ml-2 text-zinc-800 hover:text-amber-500 opacity-20 hover:opacity-100 transition-opacity">
             Admin Panel #3
+          </button>
+          <button onClick={() => { setActiveTab('admin-p4'); window.scrollTo(0,0); }} className="ml-2 text-zinc-800 hover:text-amber-400 opacity-20 hover:opacity-100 transition-opacity font-bold">
+            Admin Panel #4
           </button>
         </p>
         <div className="flex items-center gap-6">

@@ -149,9 +149,14 @@ return (
                       <h3 className="text-xl font-bold text-zinc-900 leading-tight">
                         {product.name}
                       </h3>
-                      <span className="text-xl font-extrabold text-zinc-900 shrink-0">
-                        ${product.price.toFixed(2)}
-                      </span>
+                      <div className="text-right shrink-0">
+                        <span className="text-xl font-extrabold text-zinc-900 block">
+                          ${product.price.toFixed(2)}
+                        </span>
+                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md inline-block mt-0.5 border border-amber-200/60">
+                          ✨ {product.pointsPrice ?? Math.round(product.price * 10)} pts
+                        </span>
+                      </div>
                     </div>
                     <p className="text-sm text-zinc-500 font-medium mb-6 line-clamp-2">
                       {product.description}
@@ -229,9 +234,14 @@ return (
                     </button>
                   </div>
                   
-                  <p className="text-3xl font-black text-zinc-900 mb-8">
-                    ${selectedProduct.price.toFixed(2)}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-4 mb-8">
+                    <p className="text-3xl font-black text-zinc-900">
+                      ${selectedProduct.price.toFixed(2)} <span className="text-sm font-bold text-zinc-400">USD</span>
+                    </p>
+                    <span className="text-sm font-extrabold text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
+                      ✨ {selectedProduct.pointsPrice ?? Math.round(selectedProduct.price * 10)} Puntos Design
+                    </span>
+                  </div>
                   
                   <div className="space-y-6 mb-10 text-zinc-600 leading-relaxed font-medium">
                     <p>{selectedProduct.description}</p>
