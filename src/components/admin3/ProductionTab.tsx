@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Panel3ProductionOrder, Panel3Quote } from './types';
-import { ClipboardList, Plus, Search, Printer, Trash2, Edit3, CheckCircle2, Clock, AlertCircle, Download } from 'lucide-react';
+import { Panel3ProductionOrder, Panel3Quote, Panel3InventoryItem, Panel3InventoryLog } from './types';
+import { ClipboardList, Plus, Search, Printer, Trash2, Edit3, CheckCircle2, Clock, AlertCircle, Download, Check } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { downloadAndPrintReport } from '../../lib/printUtils';
 
@@ -8,9 +8,21 @@ interface ProductionTabProps {
   orders: Panel3ProductionOrder[];
   setOrders: React.Dispatch<React.SetStateAction<Panel3ProductionOrder[]>>;
   quotes: Panel3Quote[];
+  inventory: Panel3InventoryItem[];
+  setInventory: React.Dispatch<React.SetStateAction<Panel3InventoryItem[]>>;
+  inventoryLogs: Panel3InventoryLog[];
+  setInventoryLogs: React.Dispatch<React.SetStateAction<Panel3InventoryLog[]>>;
 }
 
-export const ProductionTab: React.FC<ProductionTabProps> = ({ orders, setOrders, quotes }) => {
+export const ProductionTab: React.FC<ProductionTabProps> = ({
+  orders,
+  setOrders,
+  quotes,
+  inventory,
+  setInventory,
+  inventoryLogs,
+  setInventoryLogs
+}) => {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Search quote code
@@ -38,6 +50,49 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({ orders, setOrders,
   // Printable Order Modal
   const [selectedPrintOrder, setSelectedPrintOrder] = useState<Panel3ProductionOrder | null>(null);
   const [showPrintReport, setShowPrintReport] = useState(false);
+
+  // Completion Modal State
+  const [completingOrder, setCompletingOrder] = useState<Panel3ProductionOrder | null>(null);
+  const [selectedMatId, setSelectedMatId] = useState('');
+  const [deductQty, setDeductQty] = useState<number | ''>('');
+  const [wasteQty, setWasteQty] = useState<number | ''>(0);
+
+  // Dynamic Suggestion Logic for material deduction
+  const getSuggestedDeduction = (item: Panel3InventoryItem, o: Panel3ProductionOrder) => {
+    if (!item) return 0;
+    const u = item.unit.toLowerCase();
+    if (u === 'pliego' || u === 'unidad') {
+      const q = quotes.find(qt => qt.code === o.quote_code);
+      if (q) {
+        const w = q.piece_width_cm || 0;
+        const h = q.piece_length_cm || 0;
+        const sep = q.separation_cm || 0;
+        const mar = q.margin_cm || 0;
+        const matW = item.width_cm || 100;
+        const matL = item.length_cm || 100;
+        const effW = Math.max(1, matW - 2 * mar);
+        const effH = Math.max(1, matL - 2 * mar);
+        const pW = w + sep;
+        const pH = h + sep;
+        const cols = Math.floor(effW / pW) || 1;
+        const rows = Math.floor(effH / pH) || 1;
+        const pPerSheet = cols * rows || 1;
+        return Math.ceil(q.quantity / pPerSheet);
+      }
+      const sheetM2 = (item.width_cm * item.length_cm) / 10000 || 1;
+      return Math.ceil(o.net_m2 / sheetM2) || 1;
+    } else if (u === 'm2') {
+      return o.net_m2;
+    } else if (u === 'rollo') {
+      const rollM2 = (item.width_cm * item.length_cm) / 10000 || 1;
+      return Number((o.net_m2 / rollM2).toFixed(3));
+    } else {
+      if (item.category.toLowerCase().includes('3d') || u === 'g') {
+        return o.copies * 5; // Estimado 5g por copia
+      }
+      return o.copies;
+    }
+  };
 
   // Auto calculate 5% waste
   const m2WithWaste = netM2 ? (Number(netM2) * 1.05).toFixed(2) : '0.00';
@@ -166,10 +221,111 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({ orders, setOrders,
     setOrders(orders.filter(o => o.id !== id));
   };
 
+  const revertDeduction = async (ord: Panel3ProductionOrder) => {
+    const log = inventoryLogs.find(l => l.reference === ord.order_code && l.log_type === 'Salida Orden');
+    if (log) {
+      const mat = inventory.find(i => i.id === log.material_id);
+      if (mat) {
+        const restoredStock = Number(mat.stock) + Number(log.quantity);
+        await supabase.from('panel3_inventory').update({ stock: restoredStock }).eq('id', mat.id);
+        setInventory(inventory.map(i => i.id === mat.id ? { ...i, stock: restoredStock } : i));
+      }
+      await supabase.from('panel3_inventory_logs').delete().eq('id', log.id);
+      const updatedLogs = inventoryLogs.filter(l => l.id !== log.id);
+      setInventoryLogs(updatedLogs);
+      localStorage.setItem('panel3_inventory_logs', JSON.stringify(updatedLogs));
+    }
+  };
+
   const toggleStatus = async (ord: Panel3ProductionOrder) => {
-    const newStatus = ord.status === 'En Proceso' ? 'Terminada' : 'En Proceso';
-    await supabase.from('panel3_production_orders').update({ status: newStatus }).eq('id', ord.id);
-    setOrders(orders.map(o => o.id === ord.id ? { ...o, status: newStatus } : o));
+    if (ord.status === 'En Proceso') {
+      const relatedQuote = quotes.find(q => q.code === ord.quote_code);
+      const defaultMat = inventory.find(i => i.id === relatedQuote?.material_id || i.name === relatedQuote?.material_name);
+      
+      setCompletingOrder(ord);
+      if (defaultMat) {
+        setSelectedMatId(defaultMat.id);
+        setDeductQty(getSuggestedDeduction(defaultMat, ord));
+      } else {
+        setSelectedMatId('');
+        setDeductQty('');
+      }
+      setWasteQty(0);
+    } else {
+      if (confirm('¿Deseas cambiar el estado a "En Proceso" y revertir el descuento de stock de esta orden?')) {
+        await revertDeduction(ord);
+        await supabase.from('panel3_production_orders').update({ status: 'En Proceso' }).eq('id', ord.id);
+        setOrders(orders.map(o => o.id === ord.id ? { ...o, status: 'En Proceso' } : o));
+      }
+    }
+  };
+
+  const handleConfirmCompletion = async () => {
+    if (!completingOrder) return;
+    const targetMaterial = inventory.find(i => i.id === selectedMatId);
+    if (!targetMaterial) {
+      alert('Por favor selecciona un material válido del inventario.');
+      return;
+    }
+
+    const cons = Number(deductQty) || 0;
+    const waste = Number(wasteQty) || 0;
+    const totalDeduction = cons + waste;
+
+    if (totalDeduction < 0) {
+      alert('La cantidad a descontar no puede ser negativa.');
+      return;
+    }
+
+    if (targetMaterial.stock < totalDeduction) {
+      if (!confirm(`El stock actual (${targetMaterial.stock} ${targetMaterial.unit}) es menor que el consumo solicitado (${totalDeduction} ${targetMaterial.unit}). ¿Deseas continuar de todas formas?`)) {
+        return;
+      }
+    }
+
+    const newStock = Math.max(0, Number(targetMaterial.stock) - totalDeduction);
+
+    // 1. Update order status
+    await supabase.from('panel3_production_orders').update({ status: 'Terminada' }).eq('id', completingOrder.id);
+    
+    // 2. Update material stock
+    await supabase.from('panel3_inventory').update({ stock: newStock }).eq('id', targetMaterial.id);
+    setInventory(inventory.map(i => i.id === targetMaterial.id ? { ...i, stock: newStock } : i));
+
+    // 3. Register log
+    const newLog: Panel3InventoryLog = {
+      id: crypto.randomUUID(),
+      material_id: targetMaterial.id,
+      material_name: targetMaterial.name,
+      log_type: 'Salida Orden',
+      quantity: totalDeduction,
+      unit: targetMaterial.unit,
+      operator: completingOrder.operator,
+      machine: completingOrder.machine,
+      reference: completingOrder.order_code,
+      created_at: new Date().toISOString()
+    };
+
+    try {
+      const { data, error } = await supabase.from('panel3_inventory_logs').insert([newLog]).select().single();
+      if (!error && data) {
+        setInventoryLogs([data, ...inventoryLogs]);
+      } else {
+        const updatedLogs = [newLog, ...inventoryLogs];
+        setInventoryLogs(updatedLogs);
+        localStorage.setItem('panel3_inventory_logs', JSON.stringify(updatedLogs));
+      }
+    } catch (err) {
+      const updatedLogs = [newLog, ...inventoryLogs];
+      setInventoryLogs(updatedLogs);
+      localStorage.setItem('panel3_inventory_logs', JSON.stringify(updatedLogs));
+    }
+
+    // 4. Update orders state
+    setOrders(orders.map(o => o.id === completingOrder.id ? { ...o, status: 'Terminada' } : o));
+
+    setCompletingOrder(null);
+    alert(`Orden ${completingOrder.order_code} finalizada con éxito. Se descontaron ${totalDeduction} ${targetMaterial.unit} del material ${targetMaterial.name}.`);
   };
 
   return (
@@ -760,6 +916,143 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({ orders, setOrders,
               >
                 <Download className="w-4 h-4" />
                 Descargar Documento / Imprimir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmar Cierre de Orden y Consumo de Inventario */}
+      {completingOrder && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-xl font-black text-zinc-900">Finalizar Orden e Imputar Inventario</h3>
+                <p className="text-xs text-zinc-500 mt-0.5">Orden: {completingOrder.order_code} — {completingOrder.project_name}</p>
+              </div>
+              <button
+                onClick={() => setCompletingOrder(null)}
+                className="text-zinc-400 hover:text-zinc-600 font-bold text-lg px-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-sm text-zinc-700">
+              <div>
+                <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Material / Insumo Utilizado</label>
+                <select
+                  value={selectedMatId}
+                  onChange={e => {
+                    setSelectedMatId(e.target.value);
+                    const foundMat = inventory.find(i => i.id === e.target.value);
+                    if (foundMat) {
+                      setDeductQty(getSuggestedDeduction(foundMat, completingOrder));
+                    } else {
+                      setDeductQty('');
+                    }
+                  }}
+                  className="w-full rounded-xl border border-zinc-300 p-2 text-zinc-800 bg-white"
+                >
+                  <option value="">-- Selecciona el material descontable --</option>
+                  {inventory.map(item => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({item.stock} {item.unit} disp.) - {item.category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedMatId && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                        Consumo Sugerido o Neto
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={deductQty}
+                        onChange={e => setDeductQty(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full rounded-xl border border-zinc-300 p-2 text-zinc-800"
+                        placeholder="Ej: 8"
+                      />
+                      <span className="text-[10px] text-zinc-400 mt-0.5 block">
+                        Unidad: {inventory.find(i => i.id === selectedMatId)?.unit}
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                        Merma / Calibración (Opcional)
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={wasteQty}
+                        onChange={e => setWasteQty(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full rounded-xl border border-zinc-300 p-2 text-zinc-800"
+                        placeholder="Ej: 0.5"
+                      />
+                      <span className="text-[10px] text-zinc-400 mt-0.5 block">
+                        Adicional por calibración o desperdicio
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200">
+                    <div className="flex justify-between items-center text-xs">
+                      <span>Stock Actual:</span>
+                      <span className="font-bold">{inventory.find(i => i.id === selectedMatId)?.stock} {inventory.find(i => i.id === selectedMatId)?.unit}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-red-600 mt-1">
+                      <span>Total a Descontar:</span>
+                      <span className="font-bold">
+                        -{(Number(deductQty) || 0) + (Number(wasteQty) || 0)} {inventory.find(i => i.id === selectedMatId)?.unit}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs border-t pt-1 mt-1 font-bold">
+                      <span>Nuevo Stock Estimado:</span>
+                      <span>
+                        {Math.max(0, (inventory.find(i => i.id === selectedMatId)?.stock || 0) - ((Number(deductQty) || 0) + (Number(wasteQty) || 0)))} {inventory.find(i => i.id === selectedMatId)?.unit}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 border-t pt-3">
+                <div>
+                  <span className="block text-[10px] text-zinc-400 font-bold uppercase">Operador Responsable</span>
+                  <span className="text-zinc-800 font-bold">{completingOrder.operator}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] text-zinc-400 font-bold uppercase">Máquina Utilizada</span>
+                  <span className="text-zinc-800 font-bold">{completingOrder.machine}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t flex justify-end gap-2">
+              <button
+                onClick={() => setCompletingOrder(null)}
+                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmCompletion}
+                disabled={!selectedMatId}
+                className={`px-5 py-2 font-extrabold rounded-xl text-xs flex items-center gap-1.5 transition-colors ${
+                  selectedMatId
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md'
+                    : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                }`}
+              >
+                <Check className="w-4 h-4" />
+                Confirmar y Cerrar Orden
               </button>
             </div>
           </div>

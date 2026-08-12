@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { BusinessCardForm, TabType } from '../types';
-import { Sparkles, Phone, CheckCircle2, RotateCw, Image as ImageIcon, ShieldCheck, Ruler, HelpCircle } from 'lucide-react';
+import { Sparkles, Phone, CheckCircle2, RotateCw, Image as ImageIcon, ShieldCheck, Ruler, HelpCircle, Mail, Award, FileText } from 'lucide-react';
 
 interface CardQuoteViewProps {
   setActiveTab: (tab: TabType) => void;
@@ -53,11 +53,10 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
     e.preventDefault();
     if (!isFormValid) return;
 
-    const message = `*SOLICITUD DE COTIZACIÓN - TARJETAS DE PRESENTACIÓN*%0A%0A` +
+    const message = `*SOLICITUD DE TARJETA DE FIDELIDAD - PUNTOS DESIGN*%0A%0A` +
       `*Cliente:* ${encodeURIComponent(form.fullName)}%0A` +
       `*Teléfono:* ${encodeURIComponent(form.phone)}%0A` +
       `*Email:* ${encodeURIComponent(form.email)}%0A` +
-      `*Cantidad:* ${form.quantity} unidades%0A` +
       `*Acabado:* ${form.finish.toUpperCase()}%0A` +
       (form.frontUrl ? `*URL Frente:* ${encodeURIComponent(form.frontUrl)}%0A` : '') +
       (form.backUrl ? `*URL Reverso:* ${encodeURIComponent(form.backUrl)}%0A` : '') +
@@ -70,20 +69,20 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
   };
 
   return (
-    <div className="min-h-screen pt-28 pb-20 px-4 sm:px-8 bg-zinc-50/50">
+    <div className="min-h-screen pt-36 sm:pt-40 md:pt-44 pb-20 px-4 sm:px-8 bg-zinc-50/50">
       <div className="max-w-6xl mx-auto space-y-12">
         
         {/* Header */}
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel border border-zinc-200 text-xs font-bold uppercase tracking-wider text-zinc-800 shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Configurador 3D Interactivo</span>
+            <span>Configurador 3D Interactivo • Tarjeta de Fidelidad</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-900">
-            Cotizador de Tarjetas
+            Tarjeta de Fidelidad
           </h1>
           <p className="text-zinc-600 text-base sm:text-lg">
-            Visualiza en tiempo real tu tarjeta de presentación con medidas estándar exactas y envía tu solicitud directo a WhatsApp.
+            Personaliza el diseño de tu Tarjeta de Fidelidad física en 3D, conoce nuestro sistema automatizado de puntos y solicita tu membresía directamente por WhatsApp.
           </p>
         </div>
 
@@ -220,7 +219,59 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
           </div>
         </div>
 
-        {/* Quotation Form Section */}
+        {/* Loyalty Program & Automation Rules Section */}
+        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-zinc-200 shadow-md max-w-4xl mx-auto space-y-6">
+          <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
+            <div className="p-2 bg-amber-50 rounded-xl">
+              <Award className="w-6 h-6 text-amber-500 animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-zinc-900">Programa de Fidelidad & Automatización</h2>
+              <p className="text-xs text-zinc-500">Reglas esenciales para la acumulación e identificación de tus Puntos Design</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-500" />
+                <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-900">1. Acumula Puntos</h4>
+              </div>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                Por cada compra que realices de nuestros servicios de impresión y diseño, acumularás **Puntos Design** automáticamente.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-500" />
+                <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-900">2. Identificación por Correo</h4>
+              </div>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                El correo electrónico que proporciones al solicitar este servicio **debe ser el mismo registrado en tu cuenta de Design Store** para identificarte y sincronizar tus puntos.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-amber-500" />
+                <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-900">3. Emisión 100% Gratis</h4>
+              </div>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                Solicitar y emitir tu **Tarjeta de Fidelidad es 100% gratuito** (no consume tus puntos acumulados ni tiene costo de dinero).
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-amber-50/60 rounded-2xl p-4 border border-amber-200/50 flex gap-3 items-start text-xs text-zinc-700 leading-relaxed">
+            <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <strong className="font-semibold text-amber-800">Nota de Identificación:</strong> Nos aseguramos de mantener tu cuenta segura. La sincronización es automática gracias a tu correo electrónico de cliente de Design Store.
+            </div>
+          </div>
+        </div>
+
+        {/* Request Form Section */}
         <div className="glass-card rounded-3xl p-6 sm:p-12 border border-zinc-200 shadow-xl max-w-4xl mx-auto">
           <form 
             onSubmit={handleWhatsAppSend} 
@@ -232,8 +283,8 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
             className="space-y-8"
           >
             <div className="border-b border-zinc-200 pb-4">
-              <h2 className="text-xl font-bold text-zinc-900">Detalles de la Cotización</h2>
-              <p className="text-xs text-zinc-500">Complete los campos obligatorios para generar su mensaje de pedido por WhatsApp.</p>
+              <h2 className="text-xl font-bold text-zinc-900">Formulario de Solicitud</h2>
+              <p className="text-xs text-zinc-500">Complete sus datos y configure sus preferencias de puntos para su Tarjeta de Fidelidad.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -284,25 +335,6 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
                   placeholder="tu@correo.com"
                   className="w-full px-4 py-3 rounded-xl bg-white/80 border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all"
                 />
-              </div>
-
-              {/* Quantity */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Cantidad de Tarjetas
-                </label>
-                <select 
-                  name="quantity"
-                  value={form.quantity}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl bg-white/80 border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all"
-                >
-                  <option value={250}>250 unidades</option>
-                  <option value={500}>500 unidades</option>
-                  <option value={1000}>1,000 unidades (Recomendado)</option>
-                  <option value={2500}>2,500 unidades (Mayorista)</option>
-                  <option value={5000}>5,000 unidades (Gran Volumen)</option>
-                </select>
               </div>
 
               {/* Finish */}
@@ -387,7 +419,7 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
             <div className="pt-6 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-zinc-600">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Sus datos están seguros. La cotización se abrirá directamente en WhatsApp.</span>
+                <span>Sus datos están seguros. La solicitud se abrirá directamente en WhatsApp.</span>
               </div>
 
               <button
@@ -400,7 +432,7 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
                 }`}
               >
                 <Phone className="w-4 h-4" />
-                <span>Enviar cotización por WhatsApp</span>
+                <span>Enviar solicitud por WhatsApp</span>
               </button>
             </div>
 

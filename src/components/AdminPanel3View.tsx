@@ -19,7 +19,8 @@ import {
   Panel3Quote,
   Panel3ProductionOrder,
   Panel3InternalCost,
-  Panel3FinancialMovement
+  Panel3FinancialMovement,
+  Panel3InventoryLog
 } from './admin3/types';
 
 import { QuotesTab } from './admin3/QuotesTab';
@@ -117,6 +118,8 @@ export const AdminPanel3View: React.FC = () => {
     { id: '2', concept: 'Compra de Tintas Roland Eco-Solventes', movement_type: 'Compra directa', amount_usd: 140, amount_bs: 8470, exchange_rate: 60.50, created_at: new Date().toISOString() }
   ]);
 
+  const [inventoryLogs, setInventoryLogs] = useState<Panel3InventoryLog[]>([]);
+
   // Auth Verification
   useEffect(() => {
     const checkAuth = async () => {
@@ -174,7 +177,25 @@ export const AdminPanel3View: React.FC = () => {
         if (costRes.data && costRes.data.length > 0) setCosts(costRes.data);
         if (mRes.data && mRes.data.length > 0) setMovements(mRes.data);
       } catch (err) {
-        console.log('Using default local storage for panel 3');
+        console.log('Using default local storage for panel 3 core tables');
+      }
+
+      // Load logs separately with safety fallback
+      try {
+        const { data: logsData, error: logsError } = await supabase
+          .from('panel3_inventory_logs')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!logsError && logsData && logsData.length > 0) {
+          setInventoryLogs(logsData);
+        } else {
+          const localLogs = localStorage.getItem('panel3_inventory_logs');
+          if (localLogs) setInventoryLogs(JSON.parse(localLogs));
+        }
+      } catch (logErr) {
+        console.log('Using local storage fallback for inventory logs');
+        const localLogs = localStorage.getItem('panel3_inventory_logs');
+        if (localLogs) setInventoryLogs(JSON.parse(localLogs));
       }
     };
 
@@ -300,6 +321,10 @@ export const AdminPanel3View: React.FC = () => {
               orders={orders}
               setOrders={setOrders}
               quotes={quotes}
+              inventory={inventory}
+              setInventory={setInventory}
+              inventoryLogs={inventoryLogs}
+              setInventoryLogs={setInventoryLogs}
             />
           )}
 
@@ -307,6 +332,8 @@ export const AdminPanel3View: React.FC = () => {
             <InventoryTab
               inventory={inventory}
               setInventory={setInventory}
+              inventoryLogs={inventoryLogs}
+              setInventoryLogs={setInventoryLogs}
             />
           )}
 

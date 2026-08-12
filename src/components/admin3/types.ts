@@ -97,3 +97,17 @@ export interface Panel3FinancialMovement {
   exchange_rate: number;
   created_at?: string;
 }
+
+export interface Panel3InventoryLog {
+  id: string;
+  material_id: string;
+  material_name: string;
+  log_type: 'Entrada' | 'Salida Directa' | 'Salida Orden';
+  quantity: number;
+  unit: string;
+  operator: string;
+  machine?: string;
+  reference?: string;
+  created_at?: string;
+}
+
