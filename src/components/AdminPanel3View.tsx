@@ -112,6 +112,7 @@ export const AdminPanel3View: React.FC = () => {
   ]);
 
   const [dailyEstM2, setDailyEstM2] = useState<number>(35);
+  const [referralPoints, setReferralPoints] = useState<number>(500);
 
   const [movements, setMovements] = useState<Panel3FinancialMovement[]>([
     { id: '1', concept: 'Cobro Cotización ETQ0001 - Etiquetas Jugos', movement_type: 'Cobro cotización', quote_code: 'ETQ0001', amount_usd: 100, amount_bs: 6050, exchange_rate: 60.50, created_at: new Date().toISOString() },
@@ -161,13 +162,14 @@ export const AdminPanel3View: React.FC = () => {
   useEffect(() => {
     const loadSupabaseData = async () => {
       try {
-        const [cRes, iRes, qRes, oRes, costRes, mRes] = await Promise.all([
+        const [cRes, iRes, qRes, oRes, costRes, mRes, configRes] = await Promise.all([
           supabase.from('panel3_clients').select('*').order('created_at', { ascending: false }),
           supabase.from('panel3_inventory').select('*').order('created_at', { ascending: false }),
           supabase.from('panel3_quotes').select('*').order('created_at', { ascending: false }),
           supabase.from('panel3_production_orders').select('*').order('created_at', { ascending: false }),
           supabase.from('panel3_internal_costs').select('*').order('created_at', { ascending: false }),
           supabase.from('panel3_financial_movements').select('*').order('created_at', { ascending: false }),
+          supabase.from('panel3_workshop_config').select('*'),
         ]);
 
         if (cRes.data && cRes.data.length > 0) setClients(cRes.data);
@@ -176,6 +178,13 @@ export const AdminPanel3View: React.FC = () => {
         if (oRes.data && oRes.data.length > 0) setOrders(oRes.data);
         if (costRes.data && costRes.data.length > 0) setCosts(costRes.data);
         if (mRes.data && mRes.data.length > 0) setMovements(mRes.data);
+        
+        if (configRes.data && configRes.data.length > 0) {
+          const dailyVal = configRes.data.find(c => c.key === 'daily_est_m2')?.value;
+          if (dailyVal) setDailyEstM2(Number(dailyVal));
+          const refVal = configRes.data.find(c => c.key === 'referral_reward_points')?.value;
+          if (refVal) setReferralPoints(Number(refVal));
+        }
       } catch (err) {
         console.log('Using default local storage for panel 3 core tables');
       }
@@ -343,6 +352,8 @@ export const AdminPanel3View: React.FC = () => {
               setCosts={setCosts}
               dailyEstM2={dailyEstM2}
               setDailyEstM2={setDailyEstM2}
+              referralPoints={referralPoints}
+              setReferralPoints={setReferralPoints}
             />
           )}
 

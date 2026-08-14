@@ -111,3 +111,19 @@ export interface Panel3InventoryLog {
   created_at?: string;
 }
 
+export interface Panel3Machine {
+  id: string;
+  name: string;
+  status: 'Operativa' | 'En Mantenimiento';
+  created_at?: string;
+}
+
+export interface Panel3Referral {
+  id: string;
+  referrer_email: string;
+  referred_email: string;
+  points_rewarded: number;
+  rewarded_at?: string;
+  created_at?: string;
+}
+

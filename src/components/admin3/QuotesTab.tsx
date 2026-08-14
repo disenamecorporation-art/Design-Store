@@ -223,8 +223,56 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
   };
 
   const handleApprove = async (id: string) => {
+    const q = quotes.find(item => item.id === id);
+    if (!q) return;
+
+    // 1. Update quote status to approved
     await supabase.from('panel3_quotes').update({ status: 'Aprobada' }).eq('id', id);
-    setQuotes(quotes.map(q => q.id === id ? { ...q, status: 'Aprobada' } : q));
+    setQuotes(quotes.map(item => item.id === id ? { ...item, status: 'Aprobada' } : item));
+
+    // 2. Automatically generate a production order inside panel3_production_orders
+    const approxM2 = ((q.piece_width_cm * q.piece_length_cm * q.quantity) / 10000);
+    const m2WithWaste = approxM2 * 1.05;
+    const prodOrderCode = `ORD${String(Date.now()).slice(-4)}`;
+
+    const prodOrder = {
+      id: crypto.randomUUID(),
+      order_code: prodOrderCode,
+      quote_code: q.code,
+      project_name: `${q.job_name} - ${q.client_name}`,
+      operator: 'Sin asignar',
+      machine: 'Sin asignar',
+      die_cutter: 'Troquel Estándar',
+      copies: q.quantity,
+      net_m2: Number(approxM2.toFixed(2)),
+      m2_with_waste: Number(m2WithWaste.toFixed(2)),
+      eyelets: 0,
+      banner_holders: 0,
+      lamination: 'Sin laminado',
+      cut_type: 'Corte recto',
+      priority: q.priority,
+      delivery_date: q.delivery_date || '',
+      arrival_date: new Date().toISOString().split('T')[0],
+      order_type: 'Nuevo' as const,
+      is_repetition: false,
+      tech_notes: q.notes || '',
+      status: 'En Proceso' as const
+    };
+
+    try {
+      await supabase.from('panel3_production_orders').insert([prodOrder]);
+    } catch (prodErr) {
+      console.log('Error creating production order automatically:', prodErr);
+    }
+
+    // 3. Update public tracking status in the orders table to 'En proceso de impresión'
+    try {
+      await supabase.from('orders')
+        .update({ status: 'En proceso de impresión' })
+        .or(`id.ilike.%${q.code}%,project_name.ilike.%${q.job_name}%`);
+    } catch (trackErr) {
+      console.log('Error updating tracking status:', trackErr);
+    }
   };
 
   return (

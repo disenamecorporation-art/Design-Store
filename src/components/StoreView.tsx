@@ -153,8 +153,9 @@ return (
                         <span className="text-xl font-extrabold text-zinc-900 block">
                           ${product.price.toFixed(2)}
                         </span>
-                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md inline-block mt-0.5 border border-amber-200/60">
-                          ✨ {product.pointsPrice ?? Math.round(product.price * 10)} pts
+                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md inline-flex items-center gap-1 mt-0.5 border border-amber-200/60">
+                          <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-3.5 h-3.5 object-contain" referrerPolicy="no-referrer" />
+                          <span>{product.pointsPrice ?? Math.round(product.price * 10)} pts</span>
                         </span>
                       </div>
                     </div>
@@ -238,8 +239,9 @@ return (
                     <p className="text-3xl font-black text-zinc-900">
                       ${selectedProduct.price.toFixed(2)} <span className="text-sm font-bold text-zinc-400">USD</span>
                     </p>
-                    <span className="text-sm font-extrabold text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
-                      ✨ {selectedProduct.pointsPrice ?? Math.round(selectedProduct.price * 10)} Puntos Design
+                    <span className="text-sm font-extrabold text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 inline-flex items-center gap-1.5">
+                      <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-4 h-4 object-contain" referrerPolicy="no-referrer" />
+                      <span>{selectedProduct.pointsPrice ?? Math.round(selectedProduct.price * 10)} Puntos Design</span>
                     </span>
                   </div>
                   

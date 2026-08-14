@@ -31,7 +31,8 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    referredBy: ''
   });
 
   // Simulated authentication state
@@ -176,7 +177,8 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
           options: {
             data: {
               full_name: formData.name,
-              role: ['admin@designstore.ve', 'legaintcorporation@gmail.com'].includes(formData.email.toLowerCase()) ? 'admin' : 'client'
+              role: ['admin@designstore.ve', 'legaintcorporation@gmail.com'].includes(formData.email.toLowerCase()) ? 'admin' : 'client',
+              referred_by: formData.referredBy || ''
             }
           }
         });
@@ -199,18 +201,6 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
 
   const handleUpdateUserPoints = (id: string, points: number) => { console.log(id, points); };
   const handleDeleteUser = (id: string) => { console.log(id); };
-
-  const handleAddDemoAdmin = () => {
-    const adminSession: UserSession = {
-      name: 'Administrador Pro',
-      email: 'admin@designstore.ve',
-      points: 5000,
-      tier: 'Diamante Elite',
-      isAdmin: true
-    };
-    setUserSession(adminSession);
-    localStorage.setItem('design_store_user_session', JSON.stringify(adminSession));
-  };
 
   return (
     <div className="min-h-screen pt-32 pb-24 px-4 sm:px-8 bg-[#fbfbfd] text-zinc-900 font-sans">
@@ -273,8 +263,9 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
                     <span>Puntos Design • Gift Card Club</span>
                   </div>
 
-                  <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
-                    {userSession.points.toLocaleString()} <span className="text-amber-400 font-mono text-2xl sm:text-4xl">Puntos Design</span>
+                  <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight flex items-center gap-3 flex-wrap">
+                    <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-10 h-10 sm:w-14 sm:h-14 object-contain inline-block shrink-0" referrerPolicy="no-referrer" />
+                    <span>{userSession.points.toLocaleString()} <span className="text-amber-400 font-mono text-2xl sm:text-4xl">Puntos Design</span></span>
                   </h2>
 
                   <p className="text-zinc-300 text-sm sm:text-base max-w-lg leading-relaxed">
@@ -422,17 +413,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
               </div>
             )}
 
-            {/* Non-admin quick demo trigger */}
-            {!userSession.isAdmin && (
-              <div className="text-center pt-2">
-                <button
-                  onClick={handleAddDemoAdmin}
-                  className="text-xs text-zinc-500 hover:text-zinc-900 underline transition-colors"
-                >
-                  ¿Eres Administrador? Haz clic aquí para activar el Panel Admin Demo 
-                </button>
-              </div>
-            )}
+
 
           </div>
         ) : (
@@ -541,21 +522,40 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
               </div>
 
               {!isLogin && (
-                <div className="space-y-1.5 animate-in fade-in duration-300">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Confirmar Contraseña</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-3.5 w-4 h-4 text-zinc-400" />
-                    <input 
-                      type="password" 
-                      name="confirmPassword"
-                      required
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="••••••••"
-                      className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/80 backdrop-blur-md border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all shadow-sm"
-                    />
+                <>
+                  <div className="space-y-1.5 animate-in fade-in duration-300">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Confirmar Contraseña</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-3.5 w-4 h-4 text-zinc-400" />
+                      <input 
+                        type="password" 
+                        name="confirmPassword"
+                        required
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="••••••••"
+                        className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/80 backdrop-blur-md border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all shadow-sm"
+                      />
+                    </div>
                   </div>
-                </div>
+
+                  <div className="space-y-1.5 animate-in fade-in duration-300">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-amber-600 font-bold flex items-center gap-1">
+                      <span>¿Te refirió un amigo? (Correo Opcional)</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-3.5 w-4 h-4 text-amber-500/75" />
+                      <input 
+                        type="email" 
+                        name="referredBy"
+                        value={formData.referredBy}
+                        onChange={(e) => setFormData({ ...formData, referredBy: e.target.value })}
+                        placeholder="correo@amigo.com"
+                        className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/85 backdrop-blur-md border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-sm text-zinc-900 transition-all shadow-sm font-medium"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Submit Button with Bounce/Hover Effect */}
@@ -568,14 +568,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
               </button>
             </form>
 
-            <div className="text-center pt-2">
-              <button
-                onClick={handleAddDemoAdmin}
-                className="text-xs text-zinc-500 hover:text-black underline transition-colors"
-              >
-                Acceder como Administrador Demo
-              </button>
-            </div>
+
 
             <div className="text-center">
               <p className="text-[11px] text-zinc-400">

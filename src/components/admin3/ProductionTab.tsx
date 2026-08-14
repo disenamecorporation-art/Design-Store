@@ -32,6 +32,101 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
   // Form
   const [quoteCode, setQuoteCode] = useState('');
   const [projectName, setProjectName] = useState('');
+  
+  // Dynamic Operators & Machines States
+  const [operatorsList, setOperatorsList] = useState<{ id: string; name: string; email: string; role?: string }[]>([]);
+  const [machinesList, setMachinesList] = useState<{ id: string; name: string; status: 'Operativa' | 'En Mantenimiento' }[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [newMachineName, setNewMachineName] = useState('');
+  const [showMachineSection, setShowMachineSection] = useState(false);
+  const [isTestingOperatorView, setIsTestingOperatorView] = useState(false);
+
+  React.useEffect(() => {
+    const loadOperatorsAndMachines = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setCurrentUser(session.user);
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          if (prof) {
+            setUserProfile(prof);
+          }
+        }
+
+        const { data: ops } = await supabase
+          .from('profiles')
+          .select('id, name, email, role')
+          .order('name');
+        if (ops) {
+          setOperatorsList(ops);
+        }
+
+        const { data: machs } = await supabase
+          .from('panel3_machines')
+          .select('*')
+          .order('name');
+        if (machs && machs.length > 0) {
+          setMachinesList(machs);
+        } else {
+          const defaults = [
+            { id: '1', name: 'Plotter Roland FJ-740', status: 'Operativa' as const },
+            { id: '2', name: 'Impresora Roland Eco-Solvente', status: 'Operativa' as const },
+            { id: '3', name: 'Troqueladora Mimaki', status: 'Operativa' as const }
+          ];
+          setMachinesList(defaults);
+        }
+      } catch (err) {
+        console.error('Error loading operators and machines:', err);
+      }
+    };
+    loadOperatorsAndMachines();
+  }, []);
+
+  const handleAddMachine = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMachineName.trim()) return;
+
+    const newMach = {
+      id: crypto.randomUUID(),
+      name: newMachineName.trim(),
+      status: 'Operativa' as const
+    };
+
+    try {
+      await supabase.from('panel3_machines').insert([newMach]);
+      setMachinesList([...machinesList, newMach]);
+      setNewMachineName('');
+    } catch (err) {
+      setMachinesList([...machinesList, newMach]);
+      setNewMachineName('');
+    }
+  };
+
+  const handleToggleMachineStatus = async (id: string, currentStatus: 'Operativa' | 'En Mantenimiento') => {
+    const nextStatus = currentStatus === 'Operativa' ? 'En Mantenimiento' : 'Operativa';
+    try {
+      await supabase.from('panel3_machines').update({ status: nextStatus }).eq('id', id);
+      setMachinesList(machinesList.map(m => m.id === id ? { ...m, status: nextStatus } : m));
+    } catch (err) {
+      setMachinesList(machinesList.map(m => m.id === id ? { ...m, status: nextStatus } : m));
+    }
+  };
+
+  const handleDeleteMachine = async (id: string) => {
+    if (!confirm('¿Deseas eliminar esta máquina?')) return;
+    try {
+      await supabase.from('panel3_machines').delete().eq('id', id);
+      setMachinesList(machinesList.filter(m => m.id !== id));
+    } catch (err) {
+      setMachinesList(machinesList.filter(m => m.id !== id));
+    }
+  };
+
   const [operator, setOperator] = useState('Carlos Perez');
   const [machine, setMachine] = useState('Plotter Roland FJ-740');
   const [dieCutter, setDieCutter] = useState('Troquel Estándar');
@@ -324,12 +419,313 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
     // 4. Update orders state
     setOrders(orders.map(o => o.id === completingOrder.id ? { ...o, status: 'Terminada' } : o));
 
+    // Update public tracking status in orders table to Terminado
+    try {
+      await supabase.from('orders')
+        .update({ status: 'Terminado' })
+        .or(`id.ilike.%${completingOrder.quote_code}%,project_name.ilike.%${completingOrder.project_name}%`);
+    } catch (trackErr) {
+      console.log('Error updating tracking status:', trackErr);
+    }
+
     setCompletingOrder(null);
     alert(`Orden ${completingOrder.order_code} finalizada con éxito. Se descontaron ${totalDeduction} ${targetMaterial.unit} del material ${targetMaterial.name}.`);
   };
 
+  const isOperator = userProfile?.role === 'operator';
+  const showOperatorView = isOperator || isTestingOperatorView;
+
+  const operatorName = userProfile?.name || 'Operador';
+  const operatorEmail = userProfile?.email || '';
+
+  // Filter orders assigned to this operator
+  const assignedOrders = orders.filter(o => 
+    o.operator?.toLowerCase() === operatorName.toLowerCase() ||
+    o.operator?.toLowerCase() === operatorEmail.toLowerCase() ||
+    (isTestingOperatorView && (!o.operator || o.operator === 'Sin asignar' || o.operator === 'Carlos Perez'))
+  );
+
+  const activeOrdersCount = assignedOrders.filter(o => o.status === 'En Proceso').length;
+  const completedOrdersCount = assignedOrders.filter(o => o.status === 'Terminada').length;
+
+  if (showOperatorView) {
+    return (
+      <div className="space-y-8">
+        {/* Toggle simulation bar for administrators */}
+        {userProfile?.role === 'admin' && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Simulación de Operador</span>
+            </div>
+            <button
+              onClick={() => setIsTestingOperatorView(false)}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-extrabold rounded-xl text-xs shadow-sm transition-all"
+            >
+              Volver a Vista Admin
+            </button>
+          </div>
+        )}
+
+        {/* Operator Welcome Header */}
+        <div className="bg-zinc-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <h2 className="text-3xl font-extrabold tracking-tight">Portal del Operador</h2>
+          <p className="text-zinc-400 font-medium mt-1">
+            Bienvenido, <span className="text-amber-400 font-black">{operatorName}</span>. Gestiona tu cola de producción en tiempo real.
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-200 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <Clock className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mis Trabajos en Cola</p>
+              <p className="text-3xl font-black text-zinc-900 mt-0.5">{activeOrdersCount}</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-200 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Trabajos Completados</p>
+              <p className="text-3xl font-black text-emerald-600 mt-0.5">{completedOrdersCount}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Queue of Assigned Orders */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-zinc-200">
+          <h3 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-amber-500" />
+            Mi Cola de Impresión
+          </h3>
+
+          {assignedOrders.length === 0 ? (
+            <div className="p-12 text-center bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+              <ClipboardList className="w-12 h-12 text-zinc-300 mx-auto mb-3" />
+              <p className="text-zinc-500 font-bold text-lg">No tienes trabajos asignados en este momento.</p>
+              <p className="text-xs text-zinc-400 mt-1">El administrador te asignará órdenes pronto.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {assignedOrders.map(ord => {
+                const machObj = machinesList.find(m => m.name === ord.machine);
+                const isMachOperativa = machObj ? machObj.status === 'Operativa' : true;
+                
+                return (
+                  <div key={ord.id} className="border border-zinc-100 rounded-3xl p-6 hover:shadow-md transition-all space-y-4 bg-zinc-50/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-black text-amber-800 bg-amber-50 px-2 py-1 rounded">
+                            {ord.order_code}
+                          </span>
+                          <span className={`text-[11px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            ord.priority === 'Urgente' ? 'bg-red-100 text-red-800 animate-pulse' :
+                            ord.priority === 'Alta' ? 'bg-amber-100 text-amber-800' : 'bg-zinc-100 text-zinc-800'
+                          }`}>
+                            {ord.priority}
+                          </span>
+                        </div>
+                        <h4 className="text-lg font-black text-zinc-900 mt-2">{ord.project_name}</h4>
+                        <div className="text-xs text-zinc-500 font-semibold mt-1">
+                          Cliente/Cotización: {ord.quote_code} | Troquel: {ord.die_cutter}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 shrink-0">
+                        {ord.status === 'En Proceso' ? (
+                          <button
+                            onClick={() => {
+                              setSelectedMatId('');
+                              setDeductQty('');
+                              setWasteQty(0);
+                              setCompletingOrder(ord);
+                            }}
+                            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-black font-extrabold rounded-xl text-xs shadow transition-all flex items-center gap-1.5"
+                          >
+                            <Check className="w-4 h-4" />
+                            Finalizar Trabajo (Cargar m²)
+                          </button>
+                        ) : (
+                          <span className="px-4 py-2 bg-emerald-100 text-emerald-800 font-extrabold rounded-xl text-xs flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Trabajo Terminado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-zinc-100 text-xs">
+                      <div>
+                        <span className="text-zinc-400 font-bold block text-[10px] uppercase">Máquina</span>
+                        <strong className="text-zinc-800 font-bold mt-0.5 block flex items-center gap-1.5">
+                          {ord.machine}
+                          <span className={`w-2 h-2 rounded-full ${isMachOperativa ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} title={isMachOperativa ? 'Operativa' : 'En Mantenimiento'}></span>
+                        </strong>
+                      </div>
+                      <div>
+                        <span className="text-zinc-400 font-bold block text-[10px] uppercase">Copias</span>
+                        <strong className="text-zinc-800 font-bold mt-0.5 block">{ord.copies} unids.</strong>
+                      </div>
+                      <div>
+                        <span className="text-zinc-400 font-bold block text-[10px] uppercase">Medidas m² Netos</span>
+                        <strong className="text-zinc-800 font-bold mt-0.5 block">{ord.net_m2} m²</strong>
+                      </div>
+                      <div>
+                        <span className="text-zinc-400 font-bold block text-[10px] uppercase">Merma Estimada</span>
+                        <strong className="text-zinc-800 font-bold mt-0.5 block">{ord.m2_with_waste} m²</strong>
+                      </div>
+                    </div>
+
+                    {ord.tech_notes && (
+                      <div className="bg-amber-50 border border-amber-200/50 rounded-2xl p-4 text-xs text-amber-900 font-semibold leading-relaxed">
+                        <strong>Notas Técnicas:</strong> {ord.tech_notes}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Confirmar Cierre de Orden y Consumo de Inventario */}
+        {completingOrder && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+              <div className="flex items-center justify-between border-b pb-3">
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900">Finalizar Orden e Imputar Inventario</h3>
+                  <p className="text-xs text-zinc-500 mt-0.5">Orden: {completingOrder.order_code} — {completingOrder.project_name}</p>
+                </div>
+                <button
+                  onClick={() => setCompletingOrder(null)}
+                  className="text-zinc-400 hover:text-zinc-600 font-bold text-lg px-2"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4 text-sm text-zinc-700">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">Material / Insumo Utilizado</label>
+                  <select
+                    value={selectedMatId}
+                    onChange={e => {
+                      setSelectedMatId(e.target.value);
+                      const foundMat = inventory.find(i => i.id === e.target.value);
+                      if (foundMat) {
+                        setDeductQty(getSuggestedDeduction(foundMat, completingOrder));
+                      } else {
+                        setDeductQty('');
+                      }
+                    }}
+                    className="w-full rounded-xl border border-zinc-300 p-2 text-zinc-800 bg-white"
+                  >
+                    <option value="">-- Selecciona el material descontable --</option>
+                    {inventory.map(item => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} ({item.stock} {item.unit} disp.) - {item.category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedMatId && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                          Consumo Sugerido o Neto (m²)
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={deductQty}
+                          onChange={e => setDeductQty(e.target.value === '' ? '' : Number(e.target.value))}
+                          className="w-full rounded-xl border border-zinc-300 p-2 text-zinc-800"
+                        />
+                        <span className="text-[10px] text-zinc-400 mt-0.5 block">
+                          Unidad: {inventory.find(i => i.id === selectedMatId)?.unit}
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
+                          Merma / Desperdicio (m²)
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={wasteQty}
+                          onChange={e => setWasteQty(e.target.value === '' ? '' : Number(e.target.value))}
+                          className="w-full rounded-xl border border-zinc-300 p-2 text-zinc-800"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200">
+                      <div className="flex justify-between items-center text-xs">
+                        <span>Stock Actual:</span>
+                        <span className="font-bold">{inventory.find(i => i.id === selectedMatId)?.stock} {inventory.find(i => i.id === selectedMatId)?.unit}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-red-600 mt-1">
+                        <span>Total a Descontar:</span>
+                        <span className="font-bold">
+                          -{(Number(deductQty) || 0) + (Number(wasteQty) || 0)} {inventory.find(i => i.id === selectedMatId)?.unit}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="pt-3 border-t flex justify-end gap-2">
+                <button
+                  onClick={() => setCompletingOrder(null)}
+                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold rounded-xl text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmCompletion}
+                  disabled={!selectedMatId}
+                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl text-xs shadow-md"
+                >
+                  Confirmar y Finalizar Trabajo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
+      {/* Toggle simulation bar for administrators */}
+      {userProfile?.role === 'admin' && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Modo Administrador</span>
+          </div>
+          <button
+            onClick={() => setIsTestingOperatorView(true)}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-extrabold rounded-xl text-xs shadow-sm transition-all"
+          >
+            Simular Vista de Operador
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -394,6 +790,83 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
         </div>
       </div>
 
+      {/* Sección Gestión de Máquinas */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-zinc-200 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-amber-500" />
+              Maquinaria del Taller
+            </h3>
+            <p className="text-xs text-zinc-500 mt-0.5">Controla las máquinas activas y sus estados de mantenimiento en el taller.</p>
+          </div>
+          <button
+            onClick={() => setShowMachineSection(!showMachineSection)}
+            className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-bold rounded-xl text-xs transition-all"
+          >
+            {showMachineSection ? 'Ocultar Control' : 'Ver / Registrar Máquinas'}
+          </button>
+        </div>
+
+        {showMachineSection && (
+          <div className="space-y-6 border-t border-zinc-100 pt-4">
+            <form onSubmit={handleAddMachine} className="flex flex-col sm:flex-row items-end gap-4 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+              <div className="flex-1 w-full">
+                <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">Nombre de Nueva Máquina / Plotter</label>
+                <input
+                  type="text"
+                  required
+                  value={newMachineName}
+                  onChange={e => setNewMachineName(e.target.value)}
+                  placeholder="Ej. Plotter Roland VF-640..."
+                  className="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-xl text-sm font-bold text-zinc-800 outline-none animate-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-5 py-3 bg-zinc-900 hover:bg-black text-white font-bold rounded-xl text-xs shadow-sm transition-all whitespace-nowrap"
+              >
+                + Registrar Máquina
+              </button>
+            </form>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {machinesList.map(mach => (
+                <div key={mach.id} className="border border-zinc-100 rounded-2xl p-4 flex items-center justify-between bg-zinc-50/50">
+                  <div>
+                    <h4 className="font-bold text-zinc-900 text-sm">{mach.name}</h4>
+                    <span className={`inline-block mt-1 px-2.5 py-0.5 text-[10px] font-black rounded-full uppercase ${
+                      mach.status === 'Operativa' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {mach.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleToggleMachineStatus(mach.id, mach.status)}
+                      className={`px-3 py-1.5 font-bold rounded-lg text-[10px] transition-all ${
+                        mach.status === 'Operativa'
+                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
+                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      }`}
+                    >
+                      {mach.status === 'Operativa' ? 'Mantenimiento' : 'Poner Activa'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMachine(mach.id)}
+                      className="p-1.5 text-zinc-400 hover:text-red-600 rounded-lg transition-colors"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Formulario Órdenes */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-zinc-200">
         <h3 className="text-xl font-bold text-zinc-900 mb-6 flex items-center gap-2">
@@ -445,24 +918,36 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
               <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
                 Operador
               </label>
-              <input
-                type="text"
+              <select
                 value={operator}
                 onChange={e => setOperator(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-800 outline-none"
-              />
+                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+              >
+                <option value="Sin asignar">-- Selecciona Operador --</option>
+                {operatorsList.map(op => (
+                  <option key={op.id} value={op.name}>
+                    {op.name} ({op.email})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
                 Máquina / Plotter
               </label>
-              <input
-                type="text"
+              <select
                 value={machine}
                 onChange={e => setMachine(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-800 outline-none"
-              />
+                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+              >
+                <option value="Sin asignar">-- Selecciona Máquina --</option>
+                {machinesList.map(m => (
+                  <option key={m.id} value={m.name}>
+                    {m.name} - [{m.status}]
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

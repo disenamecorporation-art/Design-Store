@@ -143,8 +143,9 @@ export const StoreAdminView: React.FC = () => {
                     <h4 className="font-bold text-zinc-900 line-clamp-1 mb-1">{product.name}</h4>
                     <div className="flex flex-wrap items-center gap-2 mb-4">
                       <span className="text-xl font-black text-indigo-600">${product.price.toFixed(2)} USD</span>
-                      <span className="text-xs font-black text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-lg">
-                        ✨ {product.pointsPrice || 0} Puntos Design
+                      <span className="text-xs font-black text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-lg inline-flex items-center gap-1">
+                        <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-3.5 h-3.5 object-contain" referrerPolicy="no-referrer" />
+                        <span>{product.pointsPrice || 0} Puntos Design</span>
                       </span>
                     </div>
                     

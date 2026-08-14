@@ -174,3 +174,21 @@ CREATE TABLE IF NOT EXISTS public.panel3_inventory_logs (
 ALTER TABLE public.panel3_inventory_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Lectura pública de logs" ON public.panel3_inventory_logs FOR SELECT USING (true);
 CREATE POLICY "Modificación libre de logs" ON public.panel3_inventory_logs FOR ALL USING (true);
+
+
+-- 9. MAQUINARIAS DEL TALLER
+CREATE TABLE IF NOT EXISTS public.panel3_machines (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Operativa' CHECK (status IN ('Operativa', 'En Mantenimiento')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.panel3_machines ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Lectura pública de maquinas" ON public.panel3_machines FOR SELECT USING (true);
+CREATE POLICY "Modificación libre de maquinas" ON public.panel3_machines FOR ALL USING (true);
+
+-- Insertar valor inicial para el sistema de referidos si no existe
+INSERT INTO public.panel3_workshop_config (key, value)
+VALUES ('referral_reward_points', '200')
+ON CONFLICT (key) DO NOTHING;

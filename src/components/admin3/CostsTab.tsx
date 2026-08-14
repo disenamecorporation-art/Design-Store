@@ -9,9 +9,18 @@ interface CostsTabProps {
   setCosts: React.Dispatch<React.SetStateAction<Panel3InternalCost[]>>;
   dailyEstM2: number;
   setDailyEstM2: React.Dispatch<React.SetStateAction<number>>;
+  referralPoints?: number;
+  setReferralPoints?: (val: number) => void;
 }
 
-export const CostsTab: React.FC<CostsTabProps> = ({ costs, setCosts, dailyEstM2, setDailyEstM2 }) => {
+export const CostsTab: React.FC<CostsTabProps> = ({ 
+  costs, 
+  setCosts, 
+  dailyEstM2, 
+  setDailyEstM2,
+  referralPoints = 500,
+  setReferralPoints
+}) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [concept, setConcept] = useState('');
   const [category, setCategory] = useState<'Costo fijo' | 'Costo variable'>('Costo fijo');
@@ -71,6 +80,11 @@ export const CostsTab: React.FC<CostsTabProps> = ({ costs, setCosts, dailyEstM2,
   const handleDailyM2Change = async (val: number) => {
     setDailyEstM2(val);
     await supabase.from('panel3_workshop_config').upsert({ key: 'daily_est_m2', value: val });
+  };
+
+  const handleReferralPointsChange = async (val: number) => {
+    if (setReferralPoints) setReferralPoints(val);
+    await supabase.from('panel3_workshop_config').upsert({ key: 'referral_reward_points', value: val });
   };
 
   // Calculations
@@ -245,6 +259,25 @@ export const CostsTab: React.FC<CostsTabProps> = ({ costs, setCosts, dailyEstM2,
             />
             <p className="text-xs text-zinc-500 font-medium leading-relaxed">
               Define cuántos m² es capaz de producir o imprimir tu taller diariamente.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-zinc-200">
+            <h3 className="text-lg font-bold text-zinc-900 mb-4">
+              Configuración de Referidos
+            </h3>
+            <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+              Puntos de recompensa (pts)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={referralPoints}
+              onChange={e => handleReferralPointsChange(Number(e.target.value) || 0)}
+              className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-lg font-black text-amber-600 focus:bg-white focus:border-amber-500 transition-all outline-none mb-3"
+            />
+            <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+              Puntos Design que recibe quien refirió cuando el usuario nuevo realiza su primera compra (marcada como "Despachado").
             </p>
           </div>
 

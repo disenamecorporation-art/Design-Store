@@ -377,7 +377,10 @@ export const AdminView: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
                   <span>Correo del Cliente</span>
-                  <span className="text-[10px] text-amber-600 font-extrabold lowercase">✨ Vincular Puntos Design</span>
+                  <span className="text-[10px] text-amber-600 font-extrabold lowercase flex items-center gap-1">
+                    <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-3.5 h-3.5 object-contain" referrerPolicy="no-referrer" />
+                    <span>vincular puntos design</span>
+                  </span>
                 </label>
                 <input 
                   type="email" 
@@ -411,7 +414,10 @@ export const AdminView: React.FC = () => {
                         : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
                     }`}
                   >
-                    ✨ Canje de Puntos (Resta Puntos)
+                    <span className="inline-flex items-center gap-1">
+                      <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-4 h-4 object-contain brightness-0 invert" referrerPolicy="no-referrer" />
+                      <span>Canje de Puntos (Resta Puntos)</span>
+                    </span>
                   </button>
                 </div>
               </div>
@@ -564,8 +570,9 @@ export const AdminView: React.FC = () => {
                     </span>
                     <h3 className="font-extrabold text-lg text-zinc-900">{order.projectName}</h3>
                     {order.paymentMethod === 'Puntos Design' || (order.pointsUsed && order.pointsUsed > 0) ? (
-                      <span className="text-xs font-black px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
-                        ✨ {order.pointsUsed || 0} Puntos Design
+                      <span className="text-xs font-black px-2.5 py-1 rounded-md bg-amber-50 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
+                        <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-3.5 h-3.5 object-contain" referrerPolicy="no-referrer" />
+                        <span>{order.pointsUsed || 0} Puntos Design</span>
                       </span>
                     ) : (
                       <span className="text-xs font-extrabold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -593,7 +600,8 @@ export const AdminView: React.FC = () => {
                     ) : (
                       order.pointsAwarded || order.status === 'Despachado' ? (
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
-                          ✨ +{Math.floor(order.totalAmount || 0)} Puntos Design Acreditados
+                          <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-3.5 h-3.5 object-contain" referrerPolicy="no-referrer" />
+                          <span>+{Math.floor(order.totalAmount || 0)} Puntos Design Acreditados</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-zinc-500 bg-zinc-100 px-2.5 py-1 rounded-md">

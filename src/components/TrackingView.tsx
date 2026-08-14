@@ -167,8 +167,8 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
             {(order.status === 'Despachado' || order.status === 'DESPACHADO' || order.pointsAwarded) && (
               <div className="mb-10 p-5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-cyan-500/10 rounded-2xl border border-amber-200 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-lg shadow-sm">
-                    ✨
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-300 text-white flex items-center justify-center shadow-sm overflow-hidden p-1 shrink-0">
+                    <img src="https://i.postimg.cc/9F2LvVpp/monedadesign.png" alt="Coin" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                   </div>
                   <div>
                     {order.paymentMethod === 'Puntos Design' || (order.pointsUsed && order.pointsUsed > 0) ? (
