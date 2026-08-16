@@ -131,7 +131,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
           <ul className="space-y-3 text-sm text-zinc-400">
             <li className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-zinc-400 shrink-0 mt-0.5" />
-              <span>Av. Principal de Las Mercedes, Caracas, Venezuela</span>
+              <span>Zona Industrial Carabobo 2 Nort Suiza, Bello monte 2 Av. Pinto salinas</span>
             </li>
             <li className="flex items-center gap-3">
               <Phone className="w-4 h-4 text-zinc-400 shrink-0" />
@@ -151,7 +151,15 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
       </div>
 
       <div className="max-w-7xl mx-auto pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
-        <p>© {new Date().getFullYear()} Design Store Venezuela. Todos los derechos reservados. | Hecho por Legaint Corporation.
+        <p>© {new Date().getFullYear()} Design Store Venezuela. Todos los derechos reservados. |{' '}
+          <a 
+            href="https://instagram.com/legaint.ve" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="font-black text-amber-500 hover:text-amber-400 hover:underline transition-colors tracking-wide"
+          >
+            Hecho por Legaint Corporation
+          </a>
           <button onClick={() => { setActiveTab('admin'); window.scrollTo(0,0); }} className="ml-2 text-zinc-800 hover:text-zinc-500 opacity-20 hover:opacity-100 transition-opacity">
             Admin CRM
           </button>

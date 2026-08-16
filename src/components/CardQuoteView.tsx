@@ -270,6 +270,90 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
           </div>
         </div>
 
+        {/* Referral System Section */}
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 text-white rounded-3xl p-8 sm:p-12 border border-zinc-800 shadow-2xl max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-center overflow-hidden relative">
+          {/* Subtle glowing backgrounds */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+          <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-yellow-500/5 rounded-full blur-[60px] pointer-events-none"></div>
+
+          {/* Left Column: Public Information (7 cols) */}
+          <div className="md:col-span-7 space-y-6 relative z-10">
+            <div className="space-y-2">
+              <span className="text-xs font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-3 py-1 rounded-full inline-block">
+                ¡Comparte y Gana!
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-none">
+                Consigue Puntos por cada Referido
+              </h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                ¡Invitar a tus amigos nunca fue tan premiado! Multiplica tus Puntos Design y canjéalos por regalos, servicios gratis y descuentos exclusivos en tus próximas órdenes.
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              {/* Step 1 */}
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-extrabold text-sm shrink-0">
+                  1
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-zinc-100">Comparte tu Recomendación</h4>
+                  <p className="text-zinc-400 text-xs mt-0.5 leading-relaxed">
+                    Invita a tus socios, conocidos o amigos emprendedores a realizar sus trabajos de impresión o diseño con nosotros.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-extrabold text-sm shrink-0">
+                  2
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-zinc-100">Tu Referido hace su Compra</h4>
+                  <p className="text-zinc-400 text-xs mt-0.5 leading-relaxed">
+                    Tu amigo realiza su primera orden de cualquier servicio (gigantografía, grabado láser, impresión 3D, empaques, etc.).
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-extrabold text-sm shrink-0">
+                  3
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-zinc-100">¡Recibes tus Puntos al Instante!</h4>
+                  <p className="text-zinc-400 text-xs mt-0.5 leading-relaxed">
+                    ¡Listo! Una vez que la compra de tu referido es completada con éxito, el sistema te otorga automáticamente tus Puntos Design acumulables de forma transparente.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Giant Bouncing Coin (5 cols) */}
+          <div className="md:col-span-5 flex flex-col items-center justify-center relative py-6 md:py-0">
+            {/* Elegant jumping coin wrapper */}
+            <div className="relative animate-[bounce_3.5s_ease-in-out_infinite] cursor-pointer group">
+              
+              {/* Coin Glow effect */}
+              <div className="absolute inset-0 bg-amber-400/30 rounded-full blur-2xl scale-110 group-hover:bg-amber-400/50 transition-all duration-300"></div>
+
+              {/* Real Image of the Coin */}
+              <img 
+                src="https://i.postimg.cc/X75J61R4/monedadesign2.png" 
+                alt="Design Store Coin" 
+                className="relative w-48 h-48 sm:w-56 sm:h-56 object-contain drop-shadow-[0_15px_30px_rgba(245,158,11,0.3)]"
+                referrerPolicy="no-referrer"
+              />
+
+              {/* Shadow underneath */}
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-28 h-3 bg-black/40 rounded-full blur-md animate-[pulse_3.5s_ease-in-out_infinite]"></div>
+            </div>
+          </div>
+        </div>
+
         {/* Request Form Section */}
         <div className="glass-card rounded-3xl p-6 sm:p-12 border border-zinc-200 shadow-xl max-w-4xl mx-auto">
           <form 
