@@ -44,39 +44,6 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const [showVideoPopup, setShowVideoPopup] = useState(true);
-
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (data && (
-          data.event === 'ended' || 
-          data.event === 'finish' || 
-          data.status === 'ended' ||
-          data.event === 'ended' ||
-          (data.event === 'onStateChange' && data.data === 0)
-        )) {
-          setShowVideoPopup(false);
-        }
-      } catch (e) {
-        // Safe to ignore
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    
-    // Fallback timer of 11 seconds (matching the video's exact 10-second duration + 1s buffer)
-    const fallbackTimer = setTimeout(() => {
-      setShowVideoPopup(false);
-    }, 11000);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      clearTimeout(fallbackTimer);
-    };
-  }, []);
-
   const handleSelectService = (service: ServiceItem) => {
     setSelectedService(service);
   };
@@ -373,27 +340,6 @@ export default function App() {
       <CartDrawer setActiveTab={setActiveTab} />
       {/* Footer */}
       <Footer setActiveTab={setActiveTab} />
-
-      {/* Global Auto-playing and Auto-destructing Video Popup */}
-      <AnimatePresence>
-        {showVideoPopup && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999] bg-black/98 flex items-center justify-center p-4 backdrop-blur-md"
-          >
-            <div className="w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 bg-black relative" style={{ position: 'relative', width: '100%', height: '0px', paddingBottom: '70.313%' }}>
-              <iframe
-                src="https://streamable.com/e/8z3oe2?autoplay=1&nocontrols=1&loop=0"
-                style={{ border: 'none', width: '100%', height: '100%', position: 'absolute', left: '0px', top: '0px', overflow: 'hidden' }}
-                allow="autoplay; fullscreen"
-                allowFullScreen
-              ></iframe>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

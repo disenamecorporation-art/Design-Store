@@ -57,7 +57,6 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
       `*Cliente:* ${encodeURIComponent(form.fullName)}%0A` +
       `*Teléfono:* ${encodeURIComponent(form.phone)}%0A` +
       `*Email:* ${encodeURIComponent(form.email)}%0A` +
-      `*Acabado:* ${form.finish.toUpperCase()}%0A` +
       (form.frontUrl ? `*URL Frente:* ${encodeURIComponent(form.frontUrl)}%0A` : '') +
       (form.backUrl ? `*URL Reverso:* ${encodeURIComponent(form.backUrl)}%0A` : '') +
       (form.comments ? `*Comentarios:* ${encodeURIComponent(form.comments)}%0A` : '') +
@@ -335,23 +334,6 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
                   placeholder="tu@correo.com"
                   className="w-full px-4 py-3 rounded-xl bg-white/80 border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all"
                 />
-              </div>
-
-              {/* Finish */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">
-                  Tipo de Acabado
-                </label>
-                <select 
-                  name="finish"
-                  value={form.finish}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl bg-white/80 border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all"
-                >
-                  <option value="mate">Laminado Mate Elegante (Suave al tacto)</option>
-                  <option value="brillante">Laminado Brillante UV (Alto brillo)</option>
-                  <option value="texturizado">Acabado Texturizado / Lino Premium</option>
-                </select>
               </div>
 
               {/* Front URL */}

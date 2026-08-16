@@ -148,7 +148,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
             {/* Glass platform for the printer to sit on, conceptually */}
             <div className="absolute bottom-10 w-3/4 h-20 bg-black/10 blur-2xl rounded-[100%] transform -rotate-x-45 translate-y-20"></div>
             
-            <div className="relative w-full h-full animate-[float_6s_ease-in-out_infinite] flex items-center justify-center lg:scale-125">
+            <div className="relative w-full h-full animate-float flex items-center justify-center lg:scale-125">
               <img 
                 src="https://i.postimg.cc/zDwY3YfM/Whats-App-Image-2026-07-30-at-23-11-18-Photoroom.png" 
                 alt="Impresora Plotter Avanzada" 

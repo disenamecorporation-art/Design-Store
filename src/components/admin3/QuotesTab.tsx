@@ -35,6 +35,13 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
   const [priority, setPriority] = useState<'Baja' | 'Normal' | 'Alta' | 'Urgente'>('Normal');
   const [quoteType, setQuoteType] = useState<'Cotización regular' | 'Muestra sin cobro' | 'Prototipo' | 'Promocional'>('Cotización regular');
 
+  // Lamination & Extra Finishing Fields
+  const [lamination, setLamination] = useState('Sin laminado');
+  const [laminationCostPerM2, setLaminationCostPerM2] = useState<number | ''>(0);
+  const [eyeletsQty, setEyeletsQty] = useState<number | ''>(0);
+  const [eyeletCost, setEyeletCost] = useState<number | ''>(0.50);
+  const [otherExtrasUsd, setOtherExtrasUsd] = useState<number | ''>(0);
+
   // Print Modal
   const [selectedPrintQuote, setSelectedPrintQuote] = useState<Panel3Quote | null>(null);
   const [showPrintReport, setShowPrintReport] = useState(false);
@@ -70,7 +77,21 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
     const iva = includeIva ? (Number(ivaPct) || 0) : 0;
 
     if (qty <= 0 || w <= 0 || h <= 0) {
-      return { piecesPerSheet: 0, sheetsNeeded: 0, netM2: 0, subtotalUsd: 0, totalUsd: 0, totalBs: 0, cols: 0, rows: 0 };
+      return { 
+        piecesPerSheet: 0, 
+        sheetsNeeded: 0, 
+        netM2: 0, 
+        subtotalUsd: 0, 
+        totalUsd: 0, 
+        totalBs: 0, 
+        cols: 0, 
+        rows: 0,
+        laminationCostTotal: 0,
+        eyeletsCostTotal: 0,
+        otherExtrasCostTotal: 0,
+        baseMaterialCost: 0,
+        totalMfgCost: 0
+      };
     }
 
     const effSheetW = Math.max(1, matWidth - 2 * mar);
@@ -99,8 +120,18 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
     const sheetM2 = (matWidth * matLength) / 10000;
     const totalMaterialM2 = sheetsNeeded * sheetM2;
 
+    // BASE MATERIAL COST
     const baseMaterialCost = netM2 * matPriceM2;
-    const subtotalWithProfit = baseMaterialCost * (1 + marginPct / 100);
+
+    // EXTRAS COSTS
+    const laminationCostTotal = netM2 * (Number(laminationCostPerM2) || 0);
+    const eyeletsCostTotal = (Number(eyeletsQty) || 0) * (Number(eyeletCost) || 0);
+    const otherExtrasCostTotal = Number(otherExtrasUsd) || 0;
+
+    // TOTAL MANUFACTURING COST (BASE + EXTRAS)
+    const totalMfgCost = baseMaterialCost + laminationCostTotal + eyeletsCostTotal + otherExtrasCostTotal;
+
+    const subtotalWithProfit = totalMfgCost * (1 + marginPct / 100);
     let finalTotalUsd = subtotalWithProfit * (1 + iva / 100);
 
     // If "Muestra sin cobro"
@@ -120,9 +151,18 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
       cols,
       rows,
       itemW: isRotatedBest ? h : w,
-      itemH: isRotatedBest ? w : h
+      itemH: isRotatedBest ? w : h,
+      laminationCostTotal,
+      eyeletsCostTotal,
+      otherExtrasCostTotal,
+      baseMaterialCost,
+      totalMfgCost
     };
-  }, [quantity, pieceWidthCm, pieceLengthCm, separationCm, marginCm, profitMarginPct, exchangeRate, includeIva, ivaPct, matWidth, matLength, matPriceM2, quoteType]);
+  }, [
+    quantity, pieceWidthCm, pieceLengthCm, separationCm, marginCm, profitMarginPct, 
+    exchangeRate, includeIva, ivaPct, matWidth, matLength, matPriceM2, quoteType,
+    laminationCostPerM2, eyeletsQty, eyeletCost, otherExtrasUsd
+  ]);
 
   const handleSaveQuote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +170,11 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
 
     const selectedClient = clients.find(c => c.id === clientId);
     const finalClientName = selectedClient ? selectedClient.name : (clientNameInput.trim() || 'Cliente General');
+
+    const rawNotes = notes.trim();
+    const laminationDesc = lamination !== 'Sin laminado' ? `${lamination} ($${laminationCostPerM2}/m²)` : 'Sin laminado';
+    const extrasBlock = `\n\n--- DETALLES DE EXTRAS ---\nLaminado: ${laminationDesc}\nOjales/Acabados: ${eyeletsQty || 0} ojales ($${eyeletCost || 0} c/u)\nOtros Extras: $${otherExtrasUsd || 0}\n--------------------------\n<!--EXTRAS:lamination=${lamination}&laminationCost=${laminationCostPerM2}&eyeletsQty=${eyeletsQty}&eyeletCost=${eyeletCost}&otherExtras=${otherExtrasUsd}-->`;
+    const finalNotes = rawNotes ? `${rawNotes}${extrasBlock}` : extrasBlock.trim();
 
     const quoteData = {
       code: editingId ? (quotes.find(q => q.id === editingId)?.code || getNextQuoteCode()) : getNextQuoteCode(),
@@ -150,7 +195,7 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
       exchange_rate: Number(exchangeRate) || 1,
       include_iva: includeIva,
       iva_pct: Number(ivaPct) || 0,
-      notes: notes.trim(),
+      notes: finalNotes,
       delivery_date: deliveryDate,
       priority,
       quote_type: quoteType,
@@ -191,6 +236,11 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
     setSeparationCm(0.5);
     setMarginCm(1.5);
     setNotes('');
+    setLamination('Sin laminado');
+    setLaminationCostPerM2(0);
+    setEyeletsQty(0);
+    setEyeletCost(0.50);
+    setOtherExtrasUsd(0);
   };
 
   const handleEdit = (q: Panel3Quote) => {
@@ -210,7 +260,28 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
     setExchangeRate(q.exchange_rate);
     setIncludeIva(q.include_iva);
     setIvaPct(q.iva_pct);
-    setNotes(q.notes || '');
+    
+    // Parse lamination and eyelets extras if present in notes metadata
+    const extrasMatch = q.notes?.match(/<!--EXTRAS:lamination=(.*?)&laminationCost=(.*?)&eyeletsQty=(.*?)&eyeletCost=(.*?)&otherExtras=(.*?)-->/);
+    if (extrasMatch) {
+      setLamination(extrasMatch[1]);
+      setLaminationCostPerM2(extrasMatch[2] === '' ? '' : Number(extrasMatch[2]));
+      setEyeletsQty(extrasMatch[3] === '' ? '' : Number(extrasMatch[3]));
+      setEyeletCost(extrasMatch[4] === '' ? '' : Number(extrasMatch[4]));
+      setOtherExtrasUsd(extrasMatch[5] === '' ? '' : Number(extrasMatch[5]));
+      
+      // Clean notes for the textarea edit view
+      const cleanNotes = q.notes?.replace(/--- DETALLES DE EXTRAS ---[\s\S]*/, '').trim();
+      setNotes(cleanNotes || '');
+    } else {
+      setNotes(q.notes || '');
+      setLamination('Sin laminado');
+      setLaminationCostPerM2(0);
+      setEyeletsQty(0);
+      setEyeletCost(0.50);
+      setOtherExtrasUsd(0);
+    }
+
     setDeliveryDate(q.delivery_date || '');
     setPriority(q.priority);
     setQuoteType(q.quote_type);
@@ -235,6 +306,15 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
     const m2WithWaste = approxM2 * 1.05;
     const prodOrderCode = `ORD${String(Date.now()).slice(-4)}`;
 
+    // Parse lamination and eyelets extras if present in notes metadata
+    let parsedLamination = 'Sin laminado';
+    let parsedEyelets = 0;
+    const extrasMatch = q.notes?.match(/<!--EXTRAS:lamination=(.*?)&laminationCost=(.*?)&eyeletsQty=(.*?)&eyeletCost=(.*?)&otherExtras=(.*?)-->/);
+    if (extrasMatch) {
+      parsedLamination = extrasMatch[1];
+      parsedEyelets = Number(extrasMatch[3]) || 0;
+    }
+
     const prodOrder = {
       id: crypto.randomUUID(),
       order_code: prodOrderCode,
@@ -246,9 +326,9 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
       copies: q.quantity,
       net_m2: Number(approxM2.toFixed(2)),
       m2_with_waste: Number(m2WithWaste.toFixed(2)),
-      eyelets: 0,
+      eyelets: parsedEyelets,
       banner_holders: 0,
-      lamination: 'Sin laminado',
+      lamination: parsedLamination,
       cut_type: 'Corte recto',
       priority: q.priority,
       delivery_date: q.delivery_date || '',
@@ -621,6 +701,106 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
                 />
               </div>
 
+              {/* Sección de Extras */}
+              <div className="md:col-span-2 lg:col-span-3 border-t border-zinc-200/60 pt-6 mt-4">
+                <h4 className="text-sm font-bold text-amber-600 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                  <span>✨</span> Laminación, Ojales y Acabados Extras (Datos de fabricación y venta)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Laminado */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Laminación / Acabado
+                    </label>
+                    <select
+                      value={lamination}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setLamination(val);
+                        // Auto-set a reasonable m² rate if they pick a standard lamination
+                        if (val === 'Laminado Mate UV' || val === 'Laminado Brillante UV') {
+                          setLaminationCostPerM2(1.50);
+                        } else if (val === 'Laminado Texturizado') {
+                          setLaminationCostPerM2(2.50);
+                        } else if (val === 'Sin laminado') {
+                          setLaminationCostPerM2(0);
+                        }
+                      }}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    >
+                      <option value="Sin laminado">Sin laminado</option>
+                      <option value="Laminado Mate UV">Laminado Mate UV</option>
+                      <option value="Laminado Brillante UV">Laminado Brillante UV</option>
+                      <option value="Laminado Texturizado">Laminado Texturizado Premium</option>
+                      <option value="Otro Laminado">Otro / Custom</option>
+                    </select>
+                  </div>
+
+                  {/* Costo Laminado por m2 */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Costo Laminación ($/m²)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={laminationCostPerM2}
+                      onChange={e => setLaminationCostPerM2(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Ej. 1.50"
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    />
+                  </div>
+
+                  {/* Cantidad de Ojales */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Ojales (Cantidad)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={eyeletsQty}
+                      onChange={e => setEyeletsQty(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Ej. 4"
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    />
+                  </div>
+
+                  {/* Costo por Ojal */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Precio por Ojal ($)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={eyeletCost}
+                      onChange={e => setEyeletCost(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Ej. 0.50"
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    />
+                  </div>
+
+                  {/* Otros extras en USD */}
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Otros Extras / Acabados ($ Total)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={otherExtrasUsd}
+                      onChange={e => setOtherExtrasUsd(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Ej. 5.00"
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none focus:bg-white focus:border-amber-500 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="md:col-span-2 lg:col-span-3">
                 <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
                   Notas / Especificaciones Técnicas
@@ -718,6 +898,47 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
                 <div className="flex justify-between"><span>Pieza:</span> <strong className="text-zinc-900">{pieceWidthCm} x {pieceLengthCm} cm</strong></div>
                 <div className="flex justify-between"><span>Distribución:</span> <strong className="text-zinc-900">{calcResults.cols} col x {calcResults.rows} filas</strong></div>
                 <div className="flex justify-between"><span>Total / Pliego:</span> <strong className="text-amber-600 font-bold">{calcResults.piecesPerSheet} unid.</strong></div>
+              </div>
+
+              {/* Desglose de Costos de Producción */}
+              <div className="space-y-2 text-xs font-medium text-zinc-600 bg-amber-50/40 p-4 rounded-xl border border-amber-100/60">
+                <div className="text-xs font-black text-amber-800 uppercase tracking-wider mb-2 border-b border-amber-200/50 pb-1 flex items-center gap-1">
+                  <span>💰</span> Costos de Producción & Margen
+                </div>
+                <div className="flex justify-between">
+                  <span>Costo Material Base:</span> 
+                  <strong className="text-zinc-900">${calcResults.baseMaterialCost.toFixed(2)} USD</strong>
+                </div>
+                
+                {calcResults.laminationCostTotal > 0 && (
+                  <div className="flex justify-between">
+                    <span>Costo Laminación:</span> 
+                    <strong className="text-zinc-900">${calcResults.laminationCostTotal.toFixed(2)} USD</strong>
+                  </div>
+                )}
+
+                {calcResults.eyeletsCostTotal > 0 && (
+                  <div className="flex justify-between">
+                    <span>Costo de Ojales:</span> 
+                    <strong className="text-zinc-900">${calcResults.eyeletsCostTotal.toFixed(2)} USD</strong>
+                  </div>
+                )}
+
+                {calcResults.otherExtrasCostTotal > 0 && (
+                  <div className="flex justify-between">
+                    <span>Otros Acabados / Extras:</span> 
+                    <strong className="text-zinc-900">${calcResults.otherExtrasCostTotal.toFixed(2)} USD</strong>
+                  </div>
+                )}
+
+                <div className="flex justify-between border-t border-amber-200/50 pt-1.5 mt-1.5 font-bold">
+                  <span>Costo de Producción:</span> 
+                  <strong className="text-amber-900">${calcResults.totalMfgCost.toFixed(2)} USD</strong>
+                </div>
+                <div className="flex justify-between text-zinc-500 text-[10px]">
+                  <span>Margen de Ganancia:</span> 
+                  <span>+{profitMarginPct}%</span>
+                </div>
               </div>
             </div>
           )}

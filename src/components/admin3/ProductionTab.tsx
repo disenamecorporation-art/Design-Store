@@ -139,7 +139,7 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
   const [priority, setPriority] = useState('Normal');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [arrivalDate, setArrivalDate] = useState(new Date().toISOString().split('T')[0]);
-  const [orderType, setOrderType] = useState<'Nuevo' | 'Repetición'>('Nuevo');
+  const [orderType, setOrderType] = useState<'Nuevo' | 'Repetición' | 'Reposición' | 'Solo Prueba'>('Nuevo');
   const [techNotes, setTechNotes] = useState('');
 
   // Printable Order Modal
@@ -432,6 +432,31 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
     alert(`Orden ${completingOrder.order_code} finalizada con éxito. Se descontaron ${totalDeduction} ${targetMaterial.unit} del material ${targetMaterial.name}.`);
   };
 
+  const handleTogglePrinting = async (ord: Panel3ProductionOrder) => {
+    const machObj = machinesList.find(m => m.name === ord.machine);
+    const isMachOperativa = machObj ? machObj.status === 'Operativa' : true;
+
+    if (!ord.is_printing) {
+      if (!isMachOperativa) {
+        alert(`❌ NO SE PUEDE INICIAR IMPRESIÓN: La máquina asignada "${ord.machine}" está actualmente EN MANTENIMIENTO. Solicita al administrador reactivarla o reasignar el trabajo.`);
+        return;
+      }
+      try {
+        await supabase.from('panel3_production_orders').update({ is_printing: true }).eq('id', ord.id);
+      } catch (err) {
+        console.log('Error updating is_printing:', err);
+      }
+      setOrders(orders.map(o => o.id === ord.id ? { ...o, is_printing: true } : o));
+    } else {
+      try {
+        await supabase.from('panel3_production_orders').update({ is_printing: false }).eq('id', ord.id);
+      } catch (err) {
+        console.log('Error updating is_printing pause:', err);
+      }
+      setOrders(orders.map(o => o.id === ord.id ? { ...o, is_printing: false } : o));
+    }
+  };
+
   const isOperator = userProfile?.role === 'operator';
   const showOperatorView = isOperator || isTestingOperatorView;
 
@@ -539,20 +564,48 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-2 shrink-0">
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
                         {ord.status === 'En Proceso' ? (
-                          <button
-                            onClick={() => {
-                              setSelectedMatId('');
-                              setDeductQty('');
-                              setWasteQty(0);
-                              setCompletingOrder(ord);
-                            }}
-                            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-black font-extrabold rounded-xl text-xs shadow transition-all flex items-center gap-1.5"
-                          >
-                            <Check className="w-4 h-4" />
-                            Finalizar Trabajo (Cargar m²)
-                          </button>
+                          <>
+                            {/* Iniciar / Pausar Impresión */}
+                            <button
+                              onClick={() => handleTogglePrinting(ord)}
+                              className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm border ${
+                                ord.is_printing 
+                                  ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
+                                  : 'bg-indigo-600 border-indigo-700 text-white hover:bg-indigo-700'
+                              }`}
+                            >
+                              {ord.is_printing ? (
+                                <>
+                                  <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+                                  <span>Pausar Impresión</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>▶️ Iniciar Impresión</span>
+                                </>
+                              )}
+                            </button>
+
+                            {/* Finalizar Trabajo */}
+                            <button
+                              onClick={() => {
+                                setSelectedMatId('');
+                                setDeductQty('');
+                                setWasteQty(0);
+                                setCompletingOrder(ord);
+                              }}
+                              className={`px-5 py-2.5 font-extrabold rounded-xl text-xs shadow transition-all flex items-center gap-1.5 ${
+                                ord.is_printing
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                  : 'bg-amber-500 hover:bg-amber-600 text-black'
+                              }`}
+                            >
+                              <Check className="w-4 h-4" />
+                              Finalizar Trabajo (Cargar m²)
+                            </button>
+                          </>
                         ) : (
                           <span className="px-4 py-2 bg-emerald-100 text-emerald-800 font-extrabold rounded-xl text-xs flex items-center gap-1.5">
                             <CheckCircle2 className="w-4 h-4" />
@@ -1076,6 +1129,8 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
               >
                 <option value="Nuevo">Nuevo</option>
                 <option value="Repetición">Repetición</option>
+                <option value="Reposición">Reposición</option>
+                <option value="Solo Prueba">Solo Prueba</option>
               </select>
             </div>
 
@@ -1192,7 +1247,10 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
                     </td>
                     <td className="py-4 px-4 font-bold text-xs">
                       <span className={`px-2.5 py-1 rounded-full ${
-                        ord.order_type === 'Repetición' ? 'bg-purple-100 text-purple-800' : 'bg-zinc-100 text-zinc-800'
+                        ord.order_type === 'Repetición' ? 'bg-purple-100 text-purple-800' :
+                        ord.order_type === 'Reposición' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                        ord.order_type === 'Solo Prueba' ? 'bg-cyan-100 text-cyan-800' :
+                        'bg-zinc-100 text-zinc-800'
                       }`}>
                         {ord.order_type}
                       </span>
@@ -1265,6 +1323,7 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
               <div><strong>Cotización Ref:</strong> {selectedPrintOrder.quote_code}</div>
               <div><strong>Operador:</strong> {selectedPrintOrder.operator}</div>
               <div><strong>Máquina:</strong> {selectedPrintOrder.machine}</div>
+              <div><strong>Tipo de Orden:</strong> <span className="font-extrabold text-amber-700">{selectedPrintOrder.order_type}</span></div>
               <div><strong>Copias / Piezas:</strong> {selectedPrintOrder.copies}</div>
               <div><strong>m² Neto + Merma (5%):</strong> {selectedPrintOrder.m2_with_waste} m²</div>
               <div><strong>Tipo de Corte:</strong> {selectedPrintOrder.cut_type}</div>
@@ -1290,6 +1349,7 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
                         <div><strong>Cotización Ref:</strong> ${selectedPrintOrder.quote_code}</div>
                         <div><strong>Operador:</strong> ${selectedPrintOrder.operator}</div>
                         <div><strong>Máquina:</strong> ${selectedPrintOrder.machine}</div>
+                        <div><strong>Tipo de Orden:</strong> <strong style="color: #b45309;">${selectedPrintOrder.order_type}</strong></div>
                         <div><strong>Copias / Piezas:</strong> ${selectedPrintOrder.copies}</div>
                         <div><strong>m² Neto + Merma (5%):</strong> ${selectedPrintOrder.m2_with_waste} m²</div>
                         <div><strong>Tipo de Corte:</strong> ${selectedPrintOrder.cut_type}</div>

@@ -71,10 +71,11 @@ export interface Panel3ProductionOrder {
   priority: string;
   delivery_date: string;
   arrival_date: string;
-  order_type: 'Nuevo' | 'Repetición';
+  order_type: 'Nuevo' | 'Repetición' | 'Reposición' | 'Solo Prueba';
   is_repetition: boolean;
   tech_notes: string;
   status: 'En Proceso' | 'Terminada';
+  is_printing?: boolean;
   created_at?: string;
 }
 
