@@ -770,7 +770,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
                       </div>
                       <div>
                         <h4 className="font-bold text-zinc-900">Correo</h4>
-                        <a href="mailto:disenamecorporation@gmail.com" className="text-zinc-500 font-medium text-sm mt-0.5 hover:text-amber-500 transition-colors">disenamecorporation@gmail.com</a>
+                        <a href="mailto:contacto@dstorevzla.com" className="text-zinc-500 font-medium text-sm mt-0.5 hover:text-amber-500 transition-colors">contacto@dstorevzla.com</a>
                       </div>
                     </div>
 
