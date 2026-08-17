@@ -129,7 +129,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="relative min-h-screen pt-48 pb-20 px-4 sm:px-8 bg-[#fbfbfd] overflow-hidden"
+              className="relative min-h-screen pt-16 pb-20 px-4 sm:px-8 bg-[#fbfbfd] overflow-hidden"
             >
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-100 via-[#fbfbfd] to-[#fbfbfd] pointer-events-none"></div>
               <div className="max-w-5xl mx-auto relative z-10 flex flex-col items-center">

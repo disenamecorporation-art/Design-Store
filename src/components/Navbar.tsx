@@ -60,269 +60,273 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-8 py-3">
+    <header className="sticky top-0 z-50 bg-[#fbfbfd]/95 backdrop-blur-md border-b border-zinc-200/45 px-4 sm:px-8 py-3.5 transition-all duration-300">
       {/* Social Bar */}
       
 
-      <div className="max-w-7xl mx-auto glass-panel rounded-3xl px-6 py-4 flex items-center justify-between shadow-sm bg-white/80 backdrop-blur-xl border border-zinc-200/50">
-        {/* Logo - Larger */}
-        <button 
-          onClick={() => handleNav('inicio')}
-          className="flex items-center group focus:outline-none shrink-0"
-        >
-          <div className="w-20 h-20 flex items-center justify-center transition-transform group-hover:scale-105">
-            <img 
-              src="https://i.postimg.cc/sfSLbNKq/designisotipo.png" 
-              alt="Design Store Venezuela" 
-              className="w-full h-full object-contain filter drop-shadow-md"
-            />
+      <div className="max-w-7xl mx-auto flex flex-col gap-3">
+        
+        {/* Top Header Row: Socials & Search inside the panel */}
+        <div className="flex items-center justify-between w-full border-b border-zinc-200/40 pb-3 gap-4">
+          {/* Social Icons */}
+          <div className="flex items-center gap-3 bg-zinc-100/75 px-3 py-1.5 rounded-full border border-zinc-200/20 shadow-inner">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-fuchsia-500 transition-colors p-0.5">
+              <Instagram className="w-4 h-4" />
+            </a>
+            <div className="w-px h-3 bg-zinc-300"></div>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-blue-600 transition-colors p-0.5">
+              <Facebook className="w-4 h-4" />
+            </a>
+            <div className="w-px h-3 bg-zinc-300"></div>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-sky-500 transition-colors p-0.5">
+              <Twitter className="w-4 h-4" />
+            </a>
           </div>
-        </button>
 
-        {/* Desktop Navigation - Filled solid black Apple pill */}
-        <nav className="hidden md:flex items-center gap-2 bg-zinc-100/90 p-2 rounded-full border border-zinc-200 shadow-inner overflow-x-auto mx-4">
-          <button
+          {/* Quick Search Bar */}
+          <div className="relative group flex-1 max-w-xs sm:max-w-sm">
+            <input 
+              type="text" 
+              placeholder="¿Qué deseas buscar hoy?..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 rounded-full bg-zinc-100/70 border border-zinc-200/40 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/20 transition-all duration-300 focus:bg-white placeholder:text-zinc-400"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 group-focus-within:text-amber-500 transition-colors" />
+          </div>
+        </div>
+
+        {/* Bottom Header Row: Navigation & Brand Actions */}
+        <div className="flex items-center justify-between w-full">
+          {/* Logo - Sleeker */}
+          <button 
             onClick={() => handleNav('inicio')}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 whitespace-nowrap ${
-              activeTab === 'inicio'
-                ? 'bg-black text-white shadow-md scale-100'
-                : 'text-zinc-800 hover:text-black hover:bg-black/10'
-            }`}
+            className="flex items-center group focus:outline-none shrink-0"
           >
-            Inicio
-          </button>
-          <button
-            onClick={() => handleNav('cotizar')}
-            className={`px-6 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
-              activeTab === 'cotizar'
-                ? 'bg-black text-white shadow-md scale-100'
-                : 'text-zinc-800 hover:text-black hover:bg-black/10'
-            }`}
-          >
-            Realizar mi tarjeta
-          </button>
-          <button
-            onClick={() => handleNav('servicios')}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
-              activeTab === 'servicios'
-                ? 'bg-black text-white shadow-md scale-100'
-                : 'text-zinc-800 hover:text-black hover:bg-black/10'
-            }`}
-          >
-            Servicios
-          </button>
-          <button
-            onClick={() => handleNav('portafolio')}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
-              activeTab === 'portafolio'
-                ? 'bg-black text-white shadow-md scale-100'
-                : 'text-zinc-800 hover:text-black hover:bg-black/10'
-            }`}
-          >
-            Portafolio
-          </button>
-          <button
-            onClick={() => handleNav('store')}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
-              activeTab === 'store'
-                ? 'bg-black text-white shadow-md scale-100'
-                : 'text-zinc-800 hover:text-black hover:bg-black/10'
-            }`}
-          >
-            Tienda
-          </button>
-          <button
-            onClick={() => handleNav('calculadora')}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
-              activeTab === 'calculadora'
-                ? 'bg-black text-white shadow-md scale-100'
-                : 'text-zinc-800 hover:text-black hover:bg-black/10'
-            }`}
-          >
-            Calculadora
-          </button>
-          <button
-            onClick={() => handleNav('tracking')}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
-              activeTab === 'tracking'
-                ? 'bg-black text-white shadow-md scale-100'
-                : 'text-zinc-800 hover:text-black hover:bg-black/10'
-            }`}
-          >
-            Tracking
-          </button>
-        </nav>
-
-        {/* Right Actions - Two separate buttons: Entrar and Registro */}
-        <div className="hidden lg:flex items-center gap-3">
-          
-
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-2 rounded-full text-zinc-800 hover:bg-zinc-100 transition-colors mr-1"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
-                {cartCount}
-              </span>
-            )}
-          </button>
-          <div className="h-6 w-px bg-zinc-200 mx-1"></div>
-
-          {session ? (
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl group"
-              >
-                <User className="w-5 h-5 group-hover:animate-bounce" />
-              </button>
-              
-              {userMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)}></div>
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-zinc-100 py-3 z-50 animate-in fade-in slide-in-from-top-4 duration-200 origin-top-right">
-                    <div className="px-4 pb-3 mb-2 border-b border-zinc-100">
-                      <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mi Cuenta</p>
-                      <p className="text-sm font-semibold text-zinc-900 truncate mt-1">{session.user?.email}</p>
-                    </div>
-                    
-                    <div className="flex flex-col px-2">
-                      {isAdmin && (<><button
-                        onClick={() => { handleNav('admin'); setUserMenuOpen(false); }}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
-                          activeTab === 'admin' ? 'bg-cyan-50 text-cyan-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
-                        }`}
-                      >
-                        <Settings className="w-4 h-4" />
-                        Admin CRM
-                      </button>
-                      <button
-                        onClick={() => { handleNav('store-admin'); setUserMenuOpen(false); }}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
-                          activeTab === 'store-admin' ? 'bg-indigo-50 text-indigo-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
-                        }`}
-                      >
-                        <ShoppingBag className="w-4 h-4" />
-                        Admin Tienda
-                      </button>
-                      <button
-                        onClick={() => { handleNav('admin-p3'); setUserMenuOpen(false); }}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
-                          activeTab === 'admin-p3' ? 'bg-amber-50 text-amber-700 font-bold' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
-                        }`}
-                      >
-                        <Sparkles className="w-4 h-4 text-amber-500" />
-                        Admin Panel #3 (Taller)
-                      </button>
-                      <button
-                        onClick={() => { handleNav('admin-p4'); setUserMenuOpen(false); }}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
-                          activeTab === 'admin-p4' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
-                        }`}
-                      >
-                        <Layers className="w-4 h-4 text-amber-600" />
-                        Admin Panel #4 (Portafolio)
-                      </button></>)}
-                      <button
-                        onClick={() => { handleNav('cuenta'); setUserMenuOpen(false); }}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
-                          activeTab === 'cuenta' ? 'bg-zinc-100 text-black' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
-                        }`}
-                      >
-                        <User className="w-4 h-4" />
-                        Mi Perfil
-                      </button>
-                      <button
-                        onClick={() => { handleLogout(); setUserMenuOpen(false); }}
-                        className="px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 text-red-600 hover:bg-red-50 mt-1"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+            <div className="w-16 h-16 flex items-center justify-center transition-transform group-hover:scale-105">
+              <img 
+                src="https://i.postimg.cc/sfSLbNKq/designisotipo.png" 
+                alt="Design Store Venezuela" 
+                className="w-full h-full object-contain filter drop-shadow-md"
+              />
             </div>
-          ) : (
-            <>
-              <button
-                onClick={() => handleNav('entrar')}
-                className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 border ${
-                  activeTab === 'entrar'
-                    ? 'bg-black text-white border-black shadow-sm'
-                    : 'bg-white/80 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
-                }`}
-              >
-                Entrar
-              </button>
-              <button
-                onClick={() => handleNav('registro')}
-                className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 shadow-md ${
-                  activeTab === 'registro'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-black text-white hover:bg-zinc-800 hover:scale-[1.02]'
-                }`}
-              >
-                Registro
-              </button>
-            </>
-          )}
-        </div>
+          </button>
 
-        {/* Mobile menu button */}
-        <div className="md:hidden flex items-center gap-2">
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-2 rounded-xl text-zinc-800 hover:bg-zinc-100 transition-colors"
-          >
-            <ShoppingBag className="w-6 h-6" />
-            {cartCount > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
-                {cartCount}
-              </span>
+          {/* Desktop Navigation - Filled solid black Apple pill */}
+          <nav className="hidden md:flex items-center gap-2 bg-zinc-100/90 p-2 rounded-full border border-zinc-200 shadow-inner overflow-x-auto mx-4">
+            <button
+              onClick={() => handleNav('inicio')}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 whitespace-nowrap ${
+                activeTab === 'inicio'
+                  ? 'bg-black text-white shadow-md scale-100'
+                  : 'text-zinc-800 hover:text-black hover:bg-black/10'
+              }`}
+            >
+              Inicio
+            </button>
+            <button
+              onClick={() => handleNav('cotizar')}
+              className={`px-6 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+                activeTab === 'cotizar'
+                  ? 'bg-black text-white shadow-md scale-100'
+                  : 'text-zinc-800 hover:text-black hover:bg-black/10'
+              }`}
+            >
+              Realizar mi tarjeta
+            </button>
+            <button
+              onClick={() => handleNav('servicios')}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+                activeTab === 'servicios'
+                  ? 'bg-black text-white shadow-md scale-100'
+                  : 'text-zinc-800 hover:text-black hover:bg-black/10'
+              }`}
+            >
+              Servicios
+            </button>
+            <button
+              onClick={() => handleNav('portafolio')}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+                activeTab === 'portafolio'
+                  ? 'bg-black text-white shadow-md scale-100'
+                  : 'text-zinc-800 hover:text-black hover:bg-black/10'
+              }`}
+            >
+              Portafolio
+            </button>
+            <button
+              onClick={() => handleNav('store')}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+                activeTab === 'store'
+                  ? 'bg-black text-white shadow-md scale-100'
+                  : 'text-zinc-800 hover:text-black hover:bg-black/10'
+              }`}
+            >
+              Tienda
+            </button>
+            <button
+              onClick={() => handleNav('calculadora')}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+                activeTab === 'calculadora'
+                  ? 'bg-black text-white shadow-md scale-100'
+                  : 'text-zinc-800 hover:text-black hover:bg-black/10'
+              }`}
+            >
+              Calculadora
+            </button>
+            <button
+              onClick={() => handleNav('tracking')}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold tracking-tight transition-all duration-300 ${
+                activeTab === 'tracking'
+                  ? 'bg-black text-white shadow-md scale-100'
+                  : 'text-zinc-800 hover:text-black hover:bg-black/10'
+              }`}
+            >
+              Tracking
+            </button>
+          </nav>
+
+          {/* Right Actions - Two separate buttons: Entrar and Registro */}
+          <div className="hidden lg:flex items-center gap-3">
+            
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 rounded-full text-zinc-800 hover:bg-zinc-100 transition-colors mr-1"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+            <div className="h-6 w-px bg-zinc-200 mx-1"></div>
+
+            {session ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl group"
+                >
+                  <User className="w-5 h-5 group-hover:animate-bounce" />
+                </button>
+                
+                {userMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)}></div>
+                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-zinc-100 py-3 z-50 animate-in fade-in slide-in-from-top-4 duration-200 origin-top-right">
+                      <div className="px-4 pb-3 mb-2 border-b border-zinc-100">
+                        <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mi Cuenta</p>
+                        <p className="text-sm font-semibold text-zinc-900 truncate mt-1">{session.user?.email}</p>
+                      </div>
+                      
+                      <div className="flex flex-col px-2">
+                        {isAdmin && (<><button
+                          onClick={() => { handleNav('admin'); setUserMenuOpen(false); }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                            activeTab === 'admin' ? 'bg-cyan-50 text-cyan-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                          }`}
+                        >
+                          <Settings className="w-4 h-4" />
+                          Admin CRM
+                        </button>
+                        <button
+                          onClick={() => { handleNav('store-admin'); setUserMenuOpen(false); }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                            activeTab === 'store-admin' ? 'bg-indigo-50 text-indigo-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                          }`}
+                        >
+                          <ShoppingBag className="w-4 h-4" />
+                          Admin Tienda
+                        </button>
+                        <button
+                          onClick={() => { handleNav('admin-p3'); setUserMenuOpen(false); }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                            activeTab === 'admin-p3' ? 'bg-amber-50 text-amber-700 font-bold' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                          }`}
+                        >
+                          <Sparkles className="w-4 h-4 text-amber-500" />
+                          Admin Panel #3 (Taller)
+                        </button>
+                        <button
+                          onClick={() => { handleNav('admin-p4'); setUserMenuOpen(false); }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                            activeTab === 'admin-p4' ? 'bg-amber-100 text-amber-900 font-bold' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                          }`}
+                        >
+                          <Layers className="w-4 h-4 text-amber-600" />
+                          Admin Panel #4 (Portafolio)
+                        </button></>)}
+                        <button
+                          onClick={() => { handleNav('cuenta'); setUserMenuOpen(false); }}
+                          className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                            activeTab === 'cuenta' ? 'bg-zinc-100 text-black' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                          }`}
+                        >
+                          <User className="w-4 h-4" />
+                          Mi Perfil
+                        </button>
+                        <button
+                          onClick={() => { handleLogout(); setUserMenuOpen(false); }}
+                          className="px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 text-red-600 hover:bg-red-50 mt-1"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Cerrar Sesión
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleNav('entrar')}
+                  className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 border ${
+                    activeTab === 'entrar'
+                      ? 'bg-black text-white border-black shadow-sm'
+                      : 'bg-white/80 text-zinc-800 border-zinc-200 hover:bg-zinc-100'
+                  }`}
+                >
+                  Entrar
+                </button>
+                <button
+                  onClick={() => handleNav('registro')}
+                  className={`px-5 py-2.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 shadow-md ${
+                    activeTab === 'registro'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-black text-white hover:bg-zinc-800 hover:scale-[1.02]'
+                  }`}
+                >
+                  Registro
+                </button>
+              </>
             )}
-          </button>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl text-zinc-800 hover:bg-zinc-100 focus:outline-none"
-          aria-label="Abrir menú"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </div>
+          </div>
 
-      {/* Sub Navigation: Search and Social */}
-      <div className="max-w-7xl mx-auto mt-2 flex items-center justify-between gap-3 px-2 sm:px-6">
-        <div className="flex gap-2 sm:gap-3 items-center glass-panel bg-white/90 backdrop-blur-md px-3 sm:px-4 py-2 rounded-full border border-zinc-200/50 shadow-sm shrink-0">
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-fuchsia-500 transition-colors p-1">
-            <Instagram className="w-4 h-4" />
-          </a>
-          <div className="w-px h-4 bg-zinc-300 hidden sm:block"></div>
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-blue-600 transition-colors p-1 hidden sm:block">
-            <Facebook className="w-4 h-4" />
-          </a>
-          <div className="w-px h-4 bg-zinc-300"></div>
-          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-sky-500 transition-colors p-1">
-            <Twitter className="w-4 h-4" />
-          </a>
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 rounded-xl text-zinc-800 hover:bg-zinc-100 transition-colors"
+            >
+              <ShoppingBag className="w-6 h-6" />
+              {cartCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-zinc-800 hover:bg-zinc-100 focus:outline-none"
+              aria-label="Abrir menú"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
-        
-        <div className="relative group flex-1 max-w-sm">
-          <input 
-            type="text" 
-            placeholder="Buscar..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 sm:pl-11 pr-4 py-2 sm:py-2.5 rounded-full bg-white/90 backdrop-blur-md border border-zinc-200/50 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all duration-300 focus:bg-white placeholder:text-zinc-400 shadow-sm"
-          />
-          <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-cyan-500 transition-colors" />
-        </div>
-        
-        <div className="hidden md:block w-[116px] opacity-0 shrink-0">Spacer</div>
       </div>
 
       {/* Mobile dropdown */}

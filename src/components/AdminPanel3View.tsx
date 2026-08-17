@@ -246,7 +246,7 @@ export const AdminPanel3View: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-100 text-zinc-900 pb-20 pt-44 md:pt-52 lg:pt-56">
+    <div className="min-h-screen bg-zinc-100 text-zinc-900 pb-20 pt-10 md:pt-12 lg:pt-16">
       {/* Banner Superior Admin */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <div className="bg-zinc-900 text-white border border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">

@@ -33,7 +33,7 @@ export const StoreView: React.FC = () => {
     addToCart(product, 1);
   };
 return (
-    <div className="min-h-screen pt-48 md:pt-56 pb-24 px-4 sm:px-8 bg-zinc-50 font-['Manrope',sans-serif]">
+    <div className="min-h-screen pt-12 md:pt-16 pb-24 px-4 sm:px-8 bg-zinc-50 font-['Manrope',sans-serif]">
       <div className="max-w-7xl mx-auto space-y-16">
         
         {/* Header Section */}

@@ -203,7 +203,7 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
   const handleDeleteUser = (id: string) => { console.log(id); };
 
   return (
-    <div className="min-h-screen pt-32 pb-24 px-4 sm:px-8 bg-[#fbfbfd] text-zinc-900 font-sans">
+    <div className="min-h-screen pt-12 pb-24 px-4 sm:px-8 bg-[#fbfbfd] text-zinc-900 font-sans">
       <div className="max-w-5xl mx-auto">
         
         {userSession ? (

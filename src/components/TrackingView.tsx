@@ -94,7 +94,7 @@ export const TrackingView: React.FC<TrackingViewProps> = ({ initialTrackingCode 
   ) : -1;
 
   return (
-    <div className="min-h-screen pt-40 lg:pt-48 pb-20 px-4 sm:px-8 bg-[#fbfbfd]">
+    <div className="min-h-screen pt-12 lg:pt-16 pb-20 px-4 sm:px-8 bg-[#fbfbfd]">
       <div className="max-w-4xl mx-auto space-y-12">
         
         {/* Header & Search */}

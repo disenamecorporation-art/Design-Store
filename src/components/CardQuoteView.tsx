@@ -68,7 +68,7 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
   };
 
   return (
-    <div className="min-h-screen pt-36 sm:pt-40 md:pt-44 pb-20 px-4 sm:px-8 bg-zinc-50/50">
+    <div className="min-h-screen pt-10 sm:pt-12 md:pt-16 pb-20 px-4 sm:px-8 bg-zinc-50/50">
       <div className="max-w-6xl mx-auto space-y-12">
         
         {/* Header */}
@@ -185,7 +185,7 @@ export const CardQuoteView: React.FC<CardQuoteViewProps> = ({ setActiveTab }) =>
                           </div>
                           <p className="text-xs font-semibold text-zinc-800">Design Store Venezuela</p>
                         </div>
-                        <p className="text-[10px] text-zinc-500 font-mono">www.designstorevzla.com</p>
+                        <p className="text-[10px] text-zinc-500 font-mono">www.dstorevzla.com</p>
                       </div>
                     )}
 

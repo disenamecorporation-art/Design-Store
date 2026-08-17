@@ -306,7 +306,7 @@ export const AdminView: React.FC = () => {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen pt-32 pb-20 px-4 flex items-center justify-center bg-zinc-50">
+      <div className="min-h-screen pt-12 pb-20 px-4 flex items-center justify-center bg-zinc-50">
         <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
       </div>
     );
@@ -314,7 +314,7 @@ export const AdminView: React.FC = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen pt-32 pb-20 px-4 flex items-center justify-center bg-zinc-50">
+      <div className="min-h-screen pt-12 pb-20 px-4 flex items-center justify-center bg-zinc-50">
         <div className="bg-white p-8 rounded-3xl shadow-sm border border-zinc-200 max-w-md w-full text-center space-y-4">
           <div className="w-16 h-16 mx-auto bg-red-100 text-red-600 rounded-2xl flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -329,7 +329,7 @@ export const AdminView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-20 px-4 sm:px-8 bg-[#fbfbfd]">
+    <div className="min-h-screen pt-12 pb-20 px-4 sm:px-8 bg-[#fbfbfd]">
       <div className="max-w-5xl mx-auto space-y-12">
         {/* Header Title */}
         <div className="text-center md:text-left">

@@ -51,7 +51,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
               <Phone className="w-5 h-5" />
             </a>
             <a 
-              href="mailto:contacto@designstorevzla.com" 
+              href="mailto:contacto@dstorevzla.com" 
               className="w-10 h-10 rounded-xl bg-zinc-800/80 flex items-center justify-center text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors"
               aria-label="Email"
             >
@@ -139,7 +139,7 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
             </li>
             <li className="flex items-center gap-3">
               <Mail className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span>ventas@designstorevzla.com</span>
+              <span>ventas@dstorevzla.com</span>
             </li>
             <li className="flex items-center gap-3">
               <Globe className="w-4 h-4 text-zinc-400 shrink-0" />

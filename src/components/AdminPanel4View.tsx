@@ -189,7 +189,7 @@ export const AdminPanel4View: React.FC = () => {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen pt-40 pb-20 flex items-center justify-center bg-[#fbfbfd]">
+      <div className="min-h-screen pt-12 pb-20 flex items-center justify-center bg-[#fbfbfd]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
       </div>
     );
@@ -197,7 +197,7 @@ export const AdminPanel4View: React.FC = () => {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen pt-40 pb-20 px-4 flex items-center justify-center bg-[#fbfbfd]">
+      <div className="min-h-screen pt-12 pb-20 px-4 flex items-center justify-center bg-[#fbfbfd]">
         <div className="max-w-md w-full bg-white p-8 rounded-3xl border border-zinc-200 text-center space-y-4">
           <ShieldCheck className="w-12 h-12 text-rose-500 mx-auto" />
           <h2 className="text-2xl font-black text-zinc-900">Acceso Restringido</h2>
@@ -208,7 +208,7 @@ export const AdminPanel4View: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pt-36 pb-24 px-4 sm:px-8 bg-[#fbfbfd]">
+    <div className="min-h-screen pt-10 pb-24 px-4 sm:px-8 bg-[#fbfbfd]">
       <div className="max-w-7xl mx-auto space-y-10">
 
         {/* Header Admin Banner */}

@@ -53,7 +53,7 @@ ${itemsList}
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen pt-32 pb-20 px-4 flex items-center justify-center bg-[#fbfbfd]">
+      <div className="min-h-screen pt-12 pb-20 px-4 flex items-center justify-center bg-[#fbfbfd]">
         <div className="bg-white p-10 sm:p-16 rounded-[3rem] shadow-xl border border-zinc-200 max-w-lg w-full text-center space-y-6">
           <div className="w-24 h-24 mx-auto bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
             <CheckCircle2 className="w-12 h-12" />
@@ -73,7 +73,7 @@ ${itemsList}
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen pt-32 pb-20 px-4 flex items-center justify-center bg-[#fbfbfd]">
+      <div className="min-h-screen pt-12 pb-20 px-4 flex items-center justify-center bg-[#fbfbfd]">
         <div className="text-center">
           <p className="text-xl text-zinc-500 font-medium mb-6">Tu carrito está vacío.</p>
           <button 
@@ -88,7 +88,7 @@ ${itemsList}
   }
 
   return (
-    <div className="min-h-screen pt-32 pb-24 px-4 sm:px-8 bg-[#fbfbfd] font-['Manrope',sans-serif]">
+    <div className="min-h-screen pt-12 pb-24 px-4 sm:px-8 bg-[#fbfbfd] font-['Manrope',sans-serif]">
       <div className="max-w-6xl mx-auto">
         <button 
           onClick={() => setActiveTab('store')}

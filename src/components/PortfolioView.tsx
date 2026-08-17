@@ -87,7 +87,7 @@ export const PortfolioView: React.FC<PortfolioViewProps> = ({ setActiveTab }) =>
   };
 
   return (
-    <div className="min-h-screen pt-36 pb-24 px-4 sm:px-8 bg-[#fbfbfd]">
+    <div className="min-h-screen pt-12 pb-24 px-4 sm:px-8 bg-[#fbfbfd]">
       <div className="max-w-7xl mx-auto space-y-12">
 
         {/* Hero Section */}

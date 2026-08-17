@@ -112,7 +112,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
     <div className="min-h-screen bg-[#fbfbfd] text-zinc-900 font-sans selection:bg-black selection:text-white overflow-x-hidden">
       
       {/* Apple-Style Hero Section */}
-      <section className="relative min-h-[95vh] flex items-center pt-32 sm:pt-36 lg:pt-24 pb-20 px-4 sm:px-8 overflow-hidden bg-[#fbfbfd]">
+      <section className="relative min-h-[85vh] flex items-center pt-10 sm:pt-12 lg:pt-16 pb-16 px-4 sm:px-8 overflow-hidden bg-[#fbfbfd]">
         
         {/* Animated Background Elements */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -124,7 +124,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ setActiveTab, onSearchTracki
         <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
           {/* Left: Text & CTA */}
-          <div className="space-y-8 text-left pt-16 sm:pt-20 lg:pt-0">
+          <div className="space-y-8 text-left pt-6 sm:pt-8 lg:pt-0">
             <h1 className="text-6xl sm:text-7xl lg:text-[5.5rem] font-bold tracking-tight text-zinc-900 leading-[1.05]">
               Creatividad,<br />tecnología y<br />frescura visual.
             </h1>

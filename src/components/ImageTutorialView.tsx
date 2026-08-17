@@ -8,7 +8,7 @@ interface ImageTutorialViewProps {
 
 export const ImageTutorialView: React.FC<ImageTutorialViewProps> = ({ setActiveTab }) => {
   return (
-    <div className="min-h-screen pt-32 pb-24 px-4 sm:px-8 bg-[#fbfbfd] text-zinc-900 font-['Montserrat']">
+    <div className="min-h-screen pt-12 pb-24 px-4 sm:px-8 bg-[#fbfbfd] text-zinc-900 font-['Montserrat']">
       <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
         
         {/* Back Button */}

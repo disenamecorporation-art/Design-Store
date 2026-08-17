@@ -73,7 +73,7 @@ export const StoreAdminView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-48 md:pt-56 pb-24 px-4 sm:px-8 bg-zinc-50 font-['Manrope',sans-serif]">
+    <div className="min-h-screen pt-12 md:pt-16 pb-24 px-4 sm:px-8 bg-zinc-50 font-['Manrope',sans-serif]">
       <div className="max-w-7xl mx-auto space-y-12">
         <div className="flex flex-col md:flex-row items-start justify-between gap-6">
           <div>
