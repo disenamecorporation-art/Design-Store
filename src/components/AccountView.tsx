@@ -27,6 +27,12 @@ interface StoredUser {
 
 export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialMode = 'entrar' }) => {
   const [isLogin, setIsLogin] = useState<boolean>(initialMode !== 'registro');
+  const [isRecovering, setIsRecovering] = useState<boolean>(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState<boolean>(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -112,8 +118,8 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
           name: user.user_metadata?.full_name || 'Usuario',
           email: user.email,
           role: 'client',
-          points: 0,
-          tier: 'Standard'
+          points: 5,
+          tier: 'Básico'
         };
         setUserSession({
           name: dummyProfile.name,
@@ -177,7 +183,11 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
           options: {
             data: {
               full_name: formData.name,
-              role: ['admin@designstore.ve', 'legaintcorporation@gmail.com'].includes(formData.email.toLowerCase()) ? 'admin' : 'client',
+              role: ['admin@designstore.ve', 'designstore.ve@gmail.com', 'designstorevzla@gmail.com'].includes(formData.email.toLowerCase()) 
+                ? 'admin' 
+                : ['dsoperador01@gmail.com', 'dsoperador02@gmail.com', 'dsoperador03@gmail.com', 'dsoperador04@gmail.com'].includes(formData.email.toLowerCase())
+                  ? 'operator'
+                  : 'client',
               referred_by: formData.referredBy || ''
             }
           }
@@ -190,6 +200,58 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
       setErrorMsg(error.message || 'Ocurrió un error en la autenticación.');
     } finally {
       setLoadingAuth(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (!formData.email) {
+      setErrorMsg('Por favor ingrese su correo electrónico.');
+      return;
+    }
+    setLoadingAuth(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: window.location.origin,
+      });
+      if (error) throw error;
+      setSuccessMsg('Se ha enviado un enlace para restablecer tu contraseña a tu correo electrónico.');
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Ocurrió un error al enviar el correo de recuperación.');
+    } finally {
+      setLoadingAuth(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (newPassword !== confirmNewPassword) {
+      setErrorMsg('Las contraseñas nuevas no coinciden.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setErrorMsg('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    setUpdatingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setSuccessMsg('Contraseña actualizada con éxito.');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setTimeout(() => {
+        setShowChangePasswordModal(false);
+        setSuccessMsg('');
+      }, 2500);
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Ocurrió un error al actualizar la contraseña.');
+    } finally {
+      setUpdatingPassword(false);
     }
   };
 
@@ -242,6 +304,13 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
                     <span>Panel Admin</span>
                   </button>
                 )}
+                <button
+                  onClick={() => { setShowChangePasswordModal(true); setErrorMsg(''); setSuccessMsg(''); }}
+                  className="px-5 py-3 rounded-full bg-white text-zinc-700 font-bold text-xs hover:bg-zinc-50 transition-all border border-zinc-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
+                >
+                  <Lock className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Seguridad</span>
+                </button>
                 <button
                   onClick={handleLogout}
                   className="px-6 py-3 rounded-full bg-white text-red-600 font-bold text-xs hover:bg-red-50 hover:text-red-700 transition-all border border-red-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
@@ -413,8 +482,149 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
               </div>
             )}
 
+            {/* Change Password Modal */}
+            {showChangePasswordModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="bg-white rounded-[32px] border border-zinc-200/80 shadow-[0_25px_60px_rgba(0,0,0,0.15)] p-6 sm:p-8 max-w-md w-full relative z-10 space-y-6">
+                  <div>
+                    <h3 className="text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
+                      <Lock className="w-5 h-5 text-zinc-700" />
+                      <span>Actualizar Contraseña</span>
+                    </h3>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      Ingresa tu nueva clave de acceso para actualizar tu cuenta.
+                    </p>
+                  </div>
 
+                  {errorMsg && (
+                    <div className="p-3.5 rounded-2xl bg-red-50 text-red-600 text-xs text-center font-medium border border-red-100">
+                      {errorMsg}
+                    </div>
+                  )}
 
+                  {successMsg && (
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 text-emerald-700 text-xs text-center font-medium border border-emerald-100 animate-bounce">
+                      {successMsg}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Nueva Contraseña</label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-3.5 w-4 h-4 text-zinc-400" />
+                        <input
+                          type="password"
+                          required
+                          value={newPassword}
+                          onChange={(e) => { setNewPassword(e.target.value); setErrorMsg(''); }}
+                          placeholder="Mínimo 6 caracteres"
+                          className="w-full pl-11 pr-4 py-3 bg-zinc-50 border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black rounded-2xl text-sm text-zinc-950"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Confirmar Nueva Contraseña</label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-3.5 w-4 h-4 text-zinc-400" />
+                        <input
+                          type="password"
+                          required
+                          value={confirmNewPassword}
+                          onChange={(e) => { setConfirmNewPassword(e.target.value); setErrorMsg(''); }}
+                          placeholder="Repite la clave"
+                          className="w-full pl-11 pr-4 py-3 bg-zinc-50 border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black rounded-2xl text-sm text-zinc-950"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => { setShowChangePasswordModal(false); setErrorMsg(''); setSuccessMsg(''); }}
+                        className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 transition-colors text-zinc-700 font-bold text-xs rounded-full"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={updatingPassword}
+                        className="flex-1 py-3 bg-black hover:bg-zinc-800 transition-colors text-white font-bold text-xs rounded-full flex items-center justify-center gap-1"
+                      >
+                        {updatingPassword ? 'Guardando...' : 'Cambiar Clave'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+          </div>
+        ) : isRecovering ? (
+          /* Password Recovery Form */
+          <div className="max-w-md mx-auto backdrop-blur-2xl bg-white/80 rounded-[36px] p-8 sm:p-10 border border-white/90 shadow-[0_25px_60px_rgba(0,0,0,0.12)] space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500 relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-gradient-to-tr from-emerald-400/20 to-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="text-center space-y-3 relative z-10">
+              <div className="w-16 h-16 rounded-3xl bg-black text-white flex items-center justify-center mx-auto p-3.5 shadow-2xl">
+                <Lock className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-zinc-900">
+                Recuperar Clave
+              </h2>
+              <p className="text-xs text-zinc-500">
+                Ingresa tu correo para recibir un enlace real de restablecimiento.
+              </p>
+            </div>
+
+            {errorMsg && (
+              <div className="p-3.5 rounded-2xl bg-red-50/90 backdrop-blur-md border border-red-200 text-red-600 text-xs font-medium text-center">
+                {errorMsg}
+              </div>
+            )}
+
+            {successMsg && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50/90 backdrop-blur-md border border-emerald-200 text-emerald-700 text-xs font-medium text-center">
+                {successMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleResetPassword} className="space-y-4 relative z-10">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Correo Electrónico</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-3.5 w-4 h-4 text-zinc-400" />
+                  <input 
+                    type="email" 
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="tu@correo.com"
+                    className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/80 backdrop-blur-md border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loadingAuth}
+                className="w-full py-4 rounded-full bg-black text-white font-semibold text-sm hover:bg-zinc-800 transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-transform duration-200 flex items-center justify-center gap-2 mt-4 group animate-pulse"
+              >
+                <span>{loadingAuth ? 'Enviando...' : 'Enviar enlace de recuperación'}</span>
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setIsRecovering(false); setErrorMsg(''); setSuccessMsg(''); }}
+                className="w-full py-3 rounded-full bg-zinc-100 text-zinc-700 font-semibold text-xs hover:bg-zinc-200 transition-all text-center mt-2 block"
+              >
+                Volver a Iniciar Sesión
+              </button>
+            </form>
           </div>
         ) : (
           /* Login / Register Forms with Gorgeous Glass */
@@ -519,6 +729,17 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
                     className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/80 backdrop-blur-md border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-black text-sm text-zinc-900 transition-all shadow-sm"
                   />
                 </div>
+                {isLogin && (
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setIsRecovering(true); setErrorMsg(''); setSuccessMsg(''); }}
+                      className="text-xs font-bold text-zinc-500 hover:text-black transition-colors"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                )}
               </div>
 
               {!isLogin && (

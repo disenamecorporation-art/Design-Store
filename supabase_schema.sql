@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- ==========================================
 -- Vincula el auto-registro con el correo que refirió opcionalmente y el rol adecuado
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, name, email, role, points, tier, referred_by)
   VALUES (
@@ -61,13 +61,13 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'Usuario'),
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'role', 'client'),
-    CASE WHEN NEW.email = 'admin@designstore.ve' THEN 5000 ELSE 750 END,
-    CASE WHEN NEW.email = 'admin@designstore.ve' THEN 'Diamante Elite' ELSE 'Oro Pro' END,
+    CASE WHEN NEW.email = 'admin@designstore.ve' THEN 5000 ELSE 5 END,
+    CASE WHEN NEW.email = 'admin@designstore.ve' THEN 'Diamante Elite' ELSE 'Básico' END,
     COALESCE(NEW.raw_user_meta_data->>'referred_by', '')
   );
   RETURN NEW;
 END;
-$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
