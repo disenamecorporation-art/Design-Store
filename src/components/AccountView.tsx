@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { TabType } from '../types';
 import { supabase } from '../lib/supabase';
-import { Sparkles, Mail, Lock, User, ArrowRight, ShieldCheck, LogOut, CheckCircle2, Gift, Plus, Trash2, Edit3, Settings, Package, DollarSign, Award, Users, RefreshCw } from 'lucide-react';
+import { Sparkles, Mail, Lock, User, ArrowRight, ShieldCheck, LogOut, CheckCircle2, Gift, Plus, Trash2, Edit3, Settings, Package, DollarSign, Award, Users, RefreshCw, Search } from 'lucide-react';
 
 interface AccountViewProps {
   setActiveTab: (tab: TabType) => void;
   initialMode?: 'entrar' | 'registro' | 'cuenta';
+  setTrackingCodeParam?: (code: string) => void;
 }
 
 interface UserSession {
@@ -25,13 +26,19 @@ interface StoredUser {
   isAdmin: boolean;
 }
 
-export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialMode = 'entrar' }) => {
+export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialMode = 'entrar', setTrackingCodeParam }) => {
   const [isLogin, setIsLogin] = useState<boolean>(initialMode !== 'registro');
   const [isRecovering, setIsRecovering] = useState<boolean>(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState<boolean>(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  // Real-time dynamic user orders states
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState<boolean>(false);
+  const [selectedStatFilter, setSelectedStatFilter] = useState<'all' | 'active' | 'quotes' | 'completed'>('all');
+  const [projectSearch, setProjectSearch] = useState<string>('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -54,24 +61,36 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
     return null;
   });
 
-  // All users database in localStorage for admin management
-  const [usersList, setUsersList] = useState<StoredUser[]>(() => {
-    const saved = localStorage.getItem('design_store_all_users');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return [];
+  // All users database for admin management, loaded dynamically from Supabase
+  const [usersList, setUsersList] = useState<StoredUser[]>([]);
+
+  const fetchRealUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('name', { ascending: true });
+      if (!error && data) {
+        const mappedUsers: StoredUser[] = data.map((profile: any) => ({
+          id: profile.id,
+          name: profile.name || 'Usuario',
+          email: profile.email || '',
+          points: profile.points || 0,
+          tier: profile.tier || 'Básico',
+          isAdmin: profile.role === 'admin'
+        }));
+        setUsersList(mappedUsers);
       }
+    } catch (e) {
+      console.error('Error fetching real users:', e);
     }
-    const initial: StoredUser[] = [
-      { id: '1', name: 'Administrador Pro', email: 'admin@designstore.ve', points: 5000, tier: 'Diamante Elite', isAdmin: true },
-      { id: '2', name: 'Carlos Mendoza', email: 'carlos@empresa.com', points: 1250, tier: 'Oro Pro', isAdmin: false },
-      { id: '3', name: 'Mariana Silva', email: 'mariana@diseno.ve', points: 850, tier: 'Plata', isAdmin: false }
-    ];
-    localStorage.setItem('design_store_all_users', JSON.stringify(initial));
-    return initial;
-  });
+  };
+
+  useEffect(() => {
+    if (userSession?.isAdmin) {
+      fetchRealUsers();
+    }
+  }, [userSession?.isAdmin]);
 
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editPointsValue, setEditPointsValue] = useState<number>(0);
@@ -108,6 +127,32 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
     return () => subscription.unsubscribe();
   }, []);
 
+  const fetchUserOrders = async (email: string, name: string) => {
+    if (!email) return;
+    setLoadingOrders(true);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .or(`customer_email.ilike.${email},customer_name.ilike.${name}`)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setUserOrders(data);
+      }
+    } catch (e) {
+      console.error('Error fetching user orders:', e);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userSession) {
+      fetchUserOrders(userSession.email, userSession.name);
+    }
+  }, []);
+
   const fetchProfile = async (user: any) => {
     try {
       let { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
@@ -128,17 +173,20 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
           tier: dummyProfile.tier,
           isAdmin: dummyProfile.role === 'admin'
         });
+        fetchUserOrders(dummyProfile.email, dummyProfile.name);
         return;
       }
 
       if (data) {
-        setUserSession({
+        const uSession = {
           name: data.name,
           email: data.email,
           points: data.points,
           tier: data.tier,
           isAdmin: data.role === 'admin'
-        });
+        };
+        setUserSession(uSession);
+        fetchUserOrders(data.email, data.name);
       }
     } catch (e) {
       console.error(e);
@@ -261,8 +309,51 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
     setActiveTab('inicio');
   };
 
-  const handleUpdateUserPoints = (id: string, points: number) => { console.log(id, points); };
-  const handleDeleteUser = (id: string) => { console.log(id); };
+  const handleUpdateUserPoints = async (id: string, points: number) => {
+    try {
+      let newTier = 'Básico';
+      if (points >= 5000) newTier = 'Diamante Elite';
+      else if (points >= 2500) newTier = 'Platino Pro';
+      else if (points >= 1000) newTier = 'Oro Pro';
+      else if (points >= 500) newTier = 'Plata';
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ points, tier: newTier })
+        .eq('id', id);
+
+      if (!error) {
+        setSuccessMsg('Puntos actualizados exitosamente en la base de datos.');
+        setEditingUserId(null);
+        fetchRealUsers();
+        // Clear success msg after 3s
+        setTimeout(() => setSuccessMsg(''), 3000);
+      } else {
+        setErrorMsg('Error al actualizar puntos: ' + error.message);
+      }
+    } catch (e: any) {
+      setErrorMsg('Error al actualizar puntos: ' + e.message);
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+      if (!error) {
+        setSuccessMsg('Usuario eliminado exitosamente.');
+        fetchRealUsers();
+        setTimeout(() => setSuccessMsg(''), 3000);
+      } else {
+        setErrorMsg('Error al eliminar usuario: ' + error.message);
+      }
+    } catch (e: any) {
+      setErrorMsg('Error al eliminar usuario: ' + e.message);
+    }
+  };
 
   return (
     <div className="min-h-screen pt-12 pb-24 px-4 sm:px-8 bg-[#fbfbfd] text-zinc-900 font-sans">
@@ -295,6 +386,14 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
               </div>
 
               <div className="flex items-center gap-3">
+                <button
+                  onClick={() => fetchUserOrders(userSession.email, userSession.name)}
+                  disabled={loadingOrders}
+                  className="p-3 rounded-full bg-white text-zinc-700 hover:bg-zinc-50 border border-zinc-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center disabled:opacity-50"
+                  title="Actualizar proyectos"
+                >
+                  <RefreshCw className={`w-4 h-4 text-zinc-500 ${loadingOrders ? 'animate-spin' : ''}`} />
+                </button>
                 {userSession.isAdmin && (
                   <button
                     onClick={() => setActiveTab('admin')}
@@ -363,41 +462,256 @@ export const AccountView: React.FC<AccountViewProps> = ({ setActiveTab, initialM
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="backdrop-blur-xl bg-white/90 rounded-3xl p-6 border border-zinc-200/80 shadow-sm space-y-2">
+              <div 
+                onClick={() => setSelectedStatFilter(selectedStatFilter === 'active' ? 'all' : 'active')}
+                className={`backdrop-blur-xl bg-white/90 rounded-3xl p-6 border shadow-sm space-y-2 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md select-none ${
+                  selectedStatFilter === 'active' 
+                    ? 'ring-2 ring-blue-600/30 bg-blue-50/20 border-blue-400' 
+                    : 'border-zinc-200/80 hover:border-blue-300'
+                }`}
+              >
                 <div className="flex items-center justify-between text-zinc-500">
                   <span className="text-xs uppercase font-semibold">Órdenes Activas</span>
                   <Package className="w-5 h-5 text-blue-600" />
                 </div>
-                <div className="text-3xl font-extrabold text-zinc-900">2</div>
-                <span className="text-[11px] text-emerald-600 font-medium">En proceso de impresión 3D</span>
+                <div className="text-3xl font-extrabold text-zinc-900">
+                  {userOrders.filter(o => 
+                    ['pendiente por impresión', 'en proceso de impresión', 'en proceso de troquelado', 'terminado', 'en proceso']
+                      .includes(o.status.toLowerCase())
+                  ).length}
+                </div>
+                <span className="text-[11px] text-blue-600 font-medium">Ver cola de impresión activa</span>
               </div>
 
-              <div className="backdrop-blur-xl bg-white/90 rounded-3xl p-6 border border-zinc-200/80 shadow-sm space-y-2">
+              <div 
+                onClick={() => setSelectedStatFilter(selectedStatFilter === 'quotes' ? 'all' : 'quotes')}
+                className={`backdrop-blur-xl bg-white/90 rounded-3xl p-6 border shadow-sm space-y-2 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md select-none ${
+                  selectedStatFilter === 'quotes' 
+                    ? 'ring-2 ring-amber-600/30 bg-amber-50/20 border-amber-400' 
+                    : 'border-zinc-200/80 hover:border-amber-300'
+                }`}
+              >
                 <div className="flex items-center justify-between text-zinc-500">
                   <span className="text-xs uppercase font-semibold">Cotizaciones</span>
                   <Sparkles className="w-5 h-5 text-amber-500" />
                 </div>
-                <div className="text-3xl font-extrabold text-zinc-900">7</div>
-                <span className="text-[11px] text-zinc-500">Todas archivadas con éxito</span>
+                <div className="text-3xl font-extrabold text-zinc-900">
+                  {userOrders.filter(o => 
+                    ['cotizado'].includes(o.status.toLowerCase())
+                  ).length}
+                </div>
+                <span className="text-[11px] text-amber-600 font-medium">Ver proyectos cotizados</span>
               </div>
 
-              <div className="backdrop-blur-xl bg-white/90 rounded-3xl p-6 border border-zinc-200/80 shadow-sm space-y-2">
+              <div 
+                onClick={() => setSelectedStatFilter(selectedStatFilter === 'completed' ? 'all' : 'completed')}
+                className={`backdrop-blur-xl bg-white/90 rounded-3xl p-6 border shadow-sm space-y-2 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md select-none ${
+                  selectedStatFilter === 'completed' 
+                    ? 'ring-2 ring-emerald-600/30 bg-emerald-50/20 border-emerald-400' 
+                    : 'border-zinc-200/80 hover:border-emerald-300'
+                }`}
+              >
                 <div className="flex items-center justify-between text-zinc-500">
                   <span className="text-xs uppercase font-semibold">Proyectos Completados</span>
                   <Award className="w-5 h-5 text-emerald-600" />
                 </div>
-                <div className="text-3xl font-extrabold text-zinc-900">14</div>
-                <span className="text-[11px] text-emerald-600 font-medium">Servicios entregados</span>
+                <div className="text-3xl font-extrabold text-zinc-900">
+                  {userOrders.filter(o => 
+                    ['despachado'].includes(o.status.toLowerCase())
+                  ).length}
+                </div>
+                <span className="text-[11px] text-emerald-600 font-medium">Ver servicios entregados</span>
               </div>
 
-              <div className="backdrop-blur-xl bg-white/90 rounded-3xl p-6 border border-zinc-200/80 shadow-sm space-y-2">
+              <div 
+                onClick={() => setSelectedStatFilter('all')}
+                className={`backdrop-blur-xl bg-white/90 rounded-3xl p-6 border shadow-sm space-y-2 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md select-none ${
+                  selectedStatFilter === 'all' 
+                    ? 'ring-2 ring-purple-600/30 bg-purple-50/20 border-purple-400' 
+                    : 'border-zinc-200/80 hover:border-purple-300'
+                }`}
+              >
                 <div className="flex items-center justify-between text-zinc-500">
                   <span className="text-xs uppercase font-semibold">Nivel de Cuenta</span>
                   <ShieldCheck className="w-5 h-5 text-purple-600" />
                 </div>
-                <div className="text-3xl font-extrabold text-zinc-900">VIP</div>
-                <span className="text-[11px] text-purple-600 font-medium">Soporte prioritario 24/7</span>
+                <div className="text-3xl font-extrabold text-zinc-900">{userSession.tier}</div>
+                <span className="text-[11px] text-purple-600 font-medium">Soporte prioritario y club</span>
               </div>
+            </div>
+
+            {/* HISTORIAL DE PROYECTOS DEL USUARIO (User's Project History) */}
+            <div className="backdrop-blur-2xl bg-white/90 rounded-[32px] p-6 sm:p-8 border border-zinc-200/80 shadow-[0_15px_40px_rgba(0,0,0,0.04)] space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-5">
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-zinc-700" />
+                    <span>Mis Proyectos y Órdenes</span>
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    {selectedStatFilter === 'all' && 'Mostrando todo tu historial de cotizaciones y órdenes'}
+                    {selectedStatFilter === 'active' && 'Mostrando tus órdenes de producción activas'}
+                    {selectedStatFilter === 'quotes' && 'Mostrando tus solicitudes de cotización'}
+                    {selectedStatFilter === 'completed' && 'Mostrando tus proyectos terminados y despachados'}
+                  </p>
+                </div>
+
+                {/* Search Bar inside History */}
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    value={projectSearch}
+                    onChange={(e) => setProjectSearch(e.target.value)}
+                    placeholder="Buscar por proyecto o código..."
+                    className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-full text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-zinc-400 focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+              {loadingOrders ? (
+                <div className="py-12 text-center space-y-3">
+                  <RefreshCw className="w-8 h-8 text-zinc-400 animate-spin mx-auto" />
+                  <p className="text-xs text-zinc-500">Cargando tus proyectos en tiempo real...</p>
+                </div>
+              ) : userOrders.length === 0 ? (
+                <div className="py-16 text-center max-w-sm mx-auto space-y-4">
+                  <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto text-zinc-400">
+                    <Package className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-bold text-zinc-800 text-sm">No se encontraron proyectos</h3>
+                    <p className="text-xs text-zinc-500 leading-relaxed">
+                      Aún no tienes proyectos registrados con nosotros. ¡Solicita una cotización para empezar!
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('cotizar')}
+                    className="px-5 py-2.5 rounded-full bg-black text-white font-bold text-xs hover:bg-zinc-800 transition-all shadow-sm"
+                  >
+                    Solicitar Cotización Ahora
+                  </button>
+                </div>
+              ) : userOrders.filter(o => {
+                const matchesSearch = 
+                  o.id.toLowerCase().includes(projectSearch.toLowerCase()) ||
+                  (o.project_name && o.project_name.toLowerCase().includes(projectSearch.toLowerCase()));
+
+                if (!matchesSearch) return false;
+
+                if (selectedStatFilter === 'active') {
+                  return ['pendiente por impresión', 'en proceso de impresión', 'en proceso de troquelado', 'terminado', 'en proceso']
+                    .includes(o.status.toLowerCase());
+                }
+                if (selectedStatFilter === 'quotes') {
+                  return ['cotizado'].includes(o.status.toLowerCase());
+                }
+                if (selectedStatFilter === 'completed') {
+                  return ['despachado'].includes(o.status.toLowerCase());
+                }
+
+                return true;
+              }).length === 0 ? (
+                <div className="py-12 text-center text-zinc-500 text-xs">
+                  Ningún proyecto coincide con los filtros aplicados.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-100 text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
+                        <th className="py-3 px-4">Código / Proyecto</th>
+                        <th className="py-3 px-4">Fecha</th>
+                        <th className="py-3 px-4">Estado</th>
+                        <th className="py-3 px-4">Monto / Método</th>
+                        <th className="py-3 px-4 text-right">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 text-xs font-medium">
+                      {userOrders
+                        .filter(o => {
+                          const matchesSearch = 
+                            o.id.toLowerCase().includes(projectSearch.toLowerCase()) ||
+                            (o.project_name && o.project_name.toLowerCase().includes(projectSearch.toLowerCase()));
+
+                          if (!matchesSearch) return false;
+
+                          if (selectedStatFilter === 'active') {
+                            return ['pendiente por impresión', 'en proceso de impresión', 'en proceso de troquelado', 'terminado', 'en proceso']
+                              .includes(o.status.toLowerCase());
+                          }
+                          if (selectedStatFilter === 'quotes') {
+                            return ['cotizado'].includes(o.status.toLowerCase());
+                          }
+                          if (selectedStatFilter === 'completed') {
+                            return ['despachado'].includes(o.status.toLowerCase());
+                          }
+
+                          return true;
+                        })
+                        .map((o) => {
+                          const isQuote = ['cotizado'].includes(o.status.toLowerCase());
+                          const isActive = ['pendiente por impresión', 'en proceso de impresión', 'en proceso de troquelado', 'terminado', 'en proceso'].includes(o.status.toLowerCase());
+
+                          return (
+                            <tr key={o.id} className="hover:bg-zinc-50/50 transition-colors">
+                              <td className="py-4 px-4">
+                                <div className="font-bold text-zinc-950 font-mono tracking-wider">{o.id}</div>
+                                <div className="text-zinc-600 mt-0.5">{o.project_name}</div>
+                              </td>
+                              <td className="py-4 px-4 text-zinc-500 font-medium">
+                                {new Date(o.created_at || Date.now()).toLocaleDateString('es-VE', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  isQuote ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                  isActive ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                                  'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                }`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${
+                                    isQuote ? 'bg-amber-500' :
+                                    isActive ? 'bg-blue-500 animate-pulse' :
+                                    'bg-emerald-500'
+                                  }`}></span>
+                                  <span>{o.status}</span>
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="font-extrabold text-zinc-900">
+                                  {o.payment_method === 'Puntos Design' || (o.points_used && o.points_used > 0) ? (
+                                    <span className="text-amber-600 font-bold">{Number(o.points_used || 0).toLocaleString()} pts</span>
+                                  ) : (
+                                    <span>${Number(o.total_amount || 0).toLocaleString()} USD</span>
+                                  )}
+                                </div>
+                                <div className="text-[10px] text-zinc-400 font-medium mt-0.5">
+                                  {o.payment_method === 'Puntos Design' || (o.points_used && o.points_used > 0) ? 'Canje Design Club' : 'Pago en Divisas'}
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-right font-medium">
+                                <button
+                                  onClick={() => {
+                                    if (setTrackingCodeParam) {
+                                      setTrackingCodeParam(o.id);
+                                    }
+                                    setActiveTab('tracking');
+                                  }}
+                                  className="px-4 py-2 rounded-full bg-zinc-100 hover:bg-black hover:text-white text-zinc-800 font-bold text-[11px] transition-all border border-zinc-200 hover:border-black"
+                                >
+                                  Ver Tracking
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* ADMIN PANEL: Only if user is admin */}

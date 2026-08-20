@@ -229,7 +229,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              <AccountView setActiveTab={setActiveTab} initialMode="entrar" />
+              <AccountView setActiveTab={setActiveTab} initialMode="entrar" setTrackingCodeParam={setTrackingCodeParam} />
             </motion.div>
           )}
 
@@ -241,7 +241,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              <AccountView setActiveTab={setActiveTab} initialMode="registro" />
+              <AccountView setActiveTab={setActiveTab} initialMode="registro" setTrackingCodeParam={setTrackingCodeParam} />
             </motion.div>
           )}
 
@@ -253,7 +253,7 @@ export default function App() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-              <AccountView setActiveTab={setActiveTab} initialMode="entrar" />
+              <AccountView setActiveTab={setActiveTab} initialMode="entrar" setTrackingCodeParam={setTrackingCodeParam} />
             </motion.div>
           )}
 
