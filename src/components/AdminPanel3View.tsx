@@ -36,6 +36,7 @@ export const AdminPanel3View: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Panel3Tab>('cotizaciones');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOperator, setIsOperator] = useState(false);
 
   // States for data
   const [clients, setClients] = useState<Panel3Client[]>([
@@ -134,22 +135,37 @@ export const AdminPanel3View: React.FC = () => {
             .eq('id', session.user.id)
             .single();
 
-          if (profile && (profile.role === 'admin' || profile.role === 'superadmin')) {
-            setIsAdmin(true);
+          if (profile) {
+            if (profile.role === 'admin' || profile.role === 'superadmin') {
+              setIsAdmin(true);
+              setIsOperator(false);
+            } else if (profile.role === 'operator') {
+              setIsAdmin(false);
+              setIsOperator(true);
+              setActiveTab('ordenes');
+            } else {
+              // Non-admin fallback for testing/preview in AI Studio workspace
+              setIsAdmin(true);
+              setIsOperator(false);
+            }
           } else {
             // Check email fallback
             if (session.user.email?.includes('admin') || session.user.email === 'legaintcorp@gmail.com') {
               setIsAdmin(true);
+              setIsOperator(false);
             } else {
               setIsAdmin(true); // Allow preview access for testing workspace
+              setIsOperator(false);
             }
           }
         } else {
           setIsAdmin(true); // Fallback for preview mode
+          setIsOperator(false);
         }
       } catch (e) {
         console.error('Auth verification error:', e);
         setIsAdmin(true);
+        setIsOperator(false);
       } finally {
         setLoading(false);
       }
@@ -220,7 +236,7 @@ export const AdminPanel3View: React.FC = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !isOperator) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 text-white">
         <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-8 text-center space-y-4 shadow-2xl">
@@ -229,7 +245,7 @@ export const AdminPanel3View: React.FC = () => {
           </div>
           <h2 className="text-2xl font-black">Acceso Restringido</h2>
           <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-            El Panel #3 de Gestión de Taller y Cotizaciones es exclusivo para administradores autenticados.
+            El Panel #3 de Gestión de Taller y Cotizaciones es exclusivo para personal autorizado.
           </p>
         </div>
       </div>
@@ -244,6 +260,13 @@ export const AdminPanel3View: React.FC = () => {
     { id: 'costos', label: 'Costos Internos', icon: Calculator },
     { id: 'ventas', label: 'Ventas y Compras', icon: DollarSign },
   ];
+
+  const visibleTabs = navTabs.filter(tab => {
+    if (isOperator) {
+      return tab.id === 'ordenes' || tab.id === 'inventario';
+    }
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-zinc-100 text-zinc-900 pb-20 pt-10 md:pt-12 lg:pt-16">
@@ -260,26 +283,30 @@ export const AdminPanel3View: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl font-black tracking-tight text-white">Admin Panel #3</h1>
+                  <h1 className="text-2xl font-black tracking-tight text-white">
+                    {isOperator ? 'Panel del Taller' : 'Admin Panel #3'}
+                  </h1>
                   <span className="px-3 py-1 bg-amber-500/20 text-amber-400 text-xs font-black rounded-full uppercase border border-amber-500/30 tracking-wider">
-                    Sistema de Taller
+                    {isOperator ? 'Personal Técnico' : 'Sistema de Taller'}
                   </span>
                 </div>
                 <p className="text-sm text-zinc-400 font-medium mt-1">
-                  Área técnica de cotizaciones, imposición de pliegos, inventario y balance.
+                  {isOperator 
+                    ? 'Cola de producción de impresión, corte, laminación y control de mermas.' 
+                    : 'Área técnica de cotizaciones, imposición de pliegos, inventario y balance.'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 bg-zinc-800/90 px-4 py-2.5 rounded-2xl border border-zinc-700/60 self-start md:self-auto shadow-inner">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Sesión de Administrador Activa
+              {isOperator ? 'Sesión de Operador Activa' : 'Sesión de Administrador Activa'}
             </div>
           </div>
 
           {/* Selector de Pestañas */}
           <div className="flex items-center gap-2.5 mt-8 overflow-x-auto no-scrollbar pb-1 border-t border-zinc-800/90 pt-6">
-            {navTabs.map(tab => {
+            {visibleTabs.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (

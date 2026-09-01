@@ -13,6 +13,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOperator, setIsOperator] = useState(false);
   const { cartCount, setIsCartOpen } = useCart();
 
   useEffect(() => {
@@ -34,13 +35,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const checkAdmin = async (currentSession: any) => {
     if (currentSession) {
       const { data } = await supabase.from('profiles').select('role').eq('id', currentSession.user.id).single();
-      if (data && data.role === 'admin') {
-        setIsAdmin(true);
+      if (data) {
+        setIsAdmin(data.role === 'admin');
+        setIsOperator(data.role === 'operator');
       } else {
         setIsAdmin(false);
+        setIsOperator(false);
       }
     } else {
       setIsAdmin(false);
+      setIsOperator(false);
     }
   };
 
@@ -258,6 +262,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                           <Layers className="w-4 h-4 text-amber-600" />
                           Admin Panel #4 (Portafolio)
                         </button></>)}
+                        
+                        {isOperator && !isAdmin && (
+                          <button
+                            onClick={() => { handleNav('admin-p3'); setUserMenuOpen(false); }}
+                            className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
+                              activeTab === 'admin-p3' ? 'bg-amber-50 text-amber-700 font-bold' : 'text-zinc-600 hover:bg-zinc-50 hover:text-black'
+                            }`}
+                          >
+                            <Sparkles className="w-4 h-4 text-amber-500" />
+                            Admin Panel #3 (Taller)
+                          </button>
+                        )}
                         <button
                           onClick={() => { handleNav('cuenta'); setUserMenuOpen(false); }}
                           className={`px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-3 ${
@@ -430,6 +446,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                     Admin Panel #4 (Portafolio)
                   </button>
                   </>
+                )}
+                
+                {isOperator && !isAdmin && (
+                  <button
+                    onClick={() => handleNav('admin-p3')}
+                    className={`px-4 py-3 rounded-xl text-left font-semibold text-base transition-colors flex items-center gap-2 ${
+                      activeTab === 'admin-p3' ? 'bg-amber-600 text-white' : 'text-zinc-800 hover:bg-zinc-100'
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    Admin Panel #3 (Taller)
+                  </button>
                 )}
                 <button
                   onClick={() => handleNav('cuenta')}
