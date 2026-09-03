@@ -42,6 +42,17 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
   const [eyeletCost, setEyeletCost] = useState<number | ''>(0.50);
   const [otherExtrasUsd, setOtherExtrasUsd] = useState<number | ''>(0);
 
+  // 3D Printing fields
+  const [hoursPerPiece, setHoursPerPiece] = useState<number | ''>(2);
+  const [gramsPerPiece, setGramsPerPiece] = useState<number | ''>(50);
+  const [hourlyRate3D, setHourlyRate3D] = useState<number | ''>(2.50);
+
+  // Laser Engraving fields
+  const [laserHoursPerPiece, setLaserHoursPerPiece] = useState<number | ''>(0.5);
+  const [laserHourlyRate, setLaserHourlyRate] = useState<number | ''>(10.00);
+  const [laserPieceSource, setLaserPieceSource] = useState<'cliente' | 'taller'>('cliente');
+  const [laserPieceCost, setLaserPieceCost] = useState<number | ''>(5.00);
+
   // Print Modal
   const [selectedPrintQuote, setSelectedPrintQuote] = useState<Panel3Quote | null>(null);
   const [showPrintReport, setShowPrintReport] = useState(false);
@@ -51,7 +62,9 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
   const matWidth = selectedMaterial ? selectedMaterial.width_cm : 100;
   const matLength = selectedMaterial ? selectedMaterial.length_cm : 100;
   const matPriceM2 = selectedMaterial ? selectedMaterial.price_per_m2 : 15;
-  const sheetFormatStr = selectedMaterial ? `${matWidth} cm x ${matLength} cm` : '100 cm x 100 cm';
+  const sheetFormatStr = selectedMaterial 
+    ? (selectedMaterial.unit === 'gr' ? 'Insumo por gramos (gr)' : `${matWidth} cm x ${matLength} cm`) 
+    : '100 cm x 100 cm';
 
   // Code generation
   const getNextQuoteCode = () => {
@@ -302,7 +315,9 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
     setQuotes(quotes.map(item => item.id === id ? { ...item, status: 'Aprobada' } : item));
 
     // 2. Automatically generate a production order inside panel3_production_orders
-    const approxM2 = ((q.piece_width_cm * q.piece_length_cm * q.quantity) / 10000);
+    const is3D = q.product_type === 'Impresión 3D';
+    const isLaser = q.product_type === 'Grabado Láser';
+    const approxM2 = (is3D || isLaser) ? 0 : ((q.piece_width_cm * q.piece_length_cm * q.quantity) / 10000);
     const m2WithWaste = approxM2 * 1.05;
     const prodOrderCode = `ORD${String(Date.now()).slice(-4)}`;
 
@@ -482,36 +497,40 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
               </div>
 
               {/* Material Select */}
-              <div>
-                <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                  Material / Rollo
-                </label>
-                <select
-                  value={materialId}
-                  onChange={e => setMaterialId(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
-                >
-                  <option value="">-- Selecciona Material --</option>
-                  {inventory.map(i => (
-                    <option key={i.id} value={i.id}>
-                      [{i.code}] {i.name} (${i.price_per_m2}/m²)
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {productType !== 'Grabado Láser' && (
+                <div>
+                  <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                    {productType === 'Impresión 3D' ? 'Material de Impresión 3D (Filamento)' : 'Material / Rollo'}
+                  </label>
+                  <select
+                    value={materialId}
+                    onChange={e => setMaterialId(e.target.value)}
+                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                  >
+                    <option value="">-- Selecciona Material --</option>
+                    {inventory.map(i => (
+                      <option key={i.id} value={i.id}>
+                        [{i.code}] {i.name} (${i.price_per_m2}/{i.unit === 'gr' ? 'gr' : 'm²'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Pliego Auto */}
-              <div>
-                <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                  Pliego de Corte (cm)
-                </label>
-                <input
-                  type="text"
-                  readOnly
-                  value={sheetFormatStr}
-                  className="w-full px-4 py-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-sm font-bold outline-none"
-                />
-              </div>
+              {productType !== 'Impresión 3D' && productType !== 'Grabado Láser' && (
+                <div>
+                  <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                    Pliego de Corte (cm)
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={sheetFormatStr}
+                    className="w-full px-4 py-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-sm font-bold outline-none"
+                  />
+                </div>
+              )}
 
               {/* Cantidad Solicitada */}
               <div>
@@ -528,64 +547,178 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
                 />
               </div>
 
+              {/* Impresión 3D fields */}
+              {productType === 'Impresión 3D' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider text-amber-700">
+                      Gramos por Pieza (gr) *
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={gramsPerPiece}
+                      onChange={e => setGramsPerPiece(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider text-amber-700">
+                      Horas de Impresión por Pieza (hrs) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      required
+                      value={hoursPerPiece}
+                      onChange={e => setHoursPerPiece(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider text-amber-700">
+                      Tasa Horaria Impresión ($/hr) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={hourlyRate3D}
+                      onChange={e => setHourlyRate3D(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Grabado Láser fields */}
+              {productType === 'Grabado Láser' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider text-indigo-700">
+                      Horas de Grabado por Pieza (hrs) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      required
+                      value={laserHoursPerPiece}
+                      onChange={e => setLaserHoursPerPiece(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider text-indigo-700">
+                      Tasa Horaria Grabado ($/hr) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      required
+                      value={laserHourlyRate}
+                      onChange={e => setLaserHourlyRate(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider text-indigo-700">
+                      Suministro de Pieza *
+                    </label>
+                    <select
+                      value={laserPieceSource}
+                      onChange={e => setLaserPieceSource(e.target.value as any)}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    >
+                      <option value="cliente">Traída por el Cliente (Costo: $0)</option>
+                      <option value="taller">Suministrada por el Taller</option>
+                    </select>
+                  </div>
+                  {laserPieceSource === 'taller' && (
+                    <div>
+                      <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider text-indigo-700">
+                        Costo de Pieza ($/unid) *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                        value={laserPieceCost}
+                        onChange={e => setLaserPieceCost(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* Medidas Pieza */}
-              <div>
-                <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                  Ancho Final (cm) *
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  required
-                  value={pieceWidthCm}
-                  onChange={e => setPieceWidthCm(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
-                />
-              </div>
+              {productType !== 'Impresión 3D' && productType !== 'Grabado Láser' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Ancho Final (cm) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      required
+                      value={pieceWidthCm}
+                      onChange={e => setPieceWidthCm(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                  Alto Final (cm) *
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0.1"
-                  required
-                  value={pieceLengthCm}
-                  onChange={e => setPieceLengthCm(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
-                />
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Alto Final (cm) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      required
+                      value={pieceLengthCm}
+                      onChange={e => setPieceLengthCm(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                  Separación Piezas (cm)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={separationCm}
-                  onChange={e => setSeparationCm(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
-                />
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Separación Piezas (cm)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={separationCm}
+                      onChange={e => setSeparationCm(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                  Margen Pliego (cm)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  value={marginCm}
-                  onChange={e => setMarginCm(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
-                />
-              </div>
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                      Margen Pliego (cm)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={marginCm}
+                      onChange={e => setMarginCm(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 outline-none"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
@@ -856,10 +989,10 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-zinc-200 space-y-6">
           <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
             <Layout className="w-5 h-5 text-amber-500" />
-            Previsualizador de Montaje
+            Previsualizador de {productType === 'Impresión 3D' ? 'Impresión 3D' : productType === 'Grabado Láser' ? 'Grabado Láser' : 'Montaje'}
           </h3>
 
-          {!pieceWidthCm || !pieceLengthCm ? (
+          {(productType !== 'Impresión 3D' && productType !== 'Grabado Láser') && (!pieceWidthCm || !pieceLengthCm) ? (
             <div className="h-64 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200 flex flex-col items-center justify-center text-center p-6">
               <Layout className="w-10 h-10 text-zinc-300 mb-2" />
               <p className="text-zinc-400 font-bold text-sm">Ingresa medidas para previsualizar el montaje.</p>
@@ -867,48 +1000,166 @@ export const QuotesTab: React.FC<QuotesTabProps> = ({ quotes, setQuotes, clients
           ) : (
             <div className="space-y-4">
               <div className="relative w-full aspect-square bg-zinc-900 rounded-2xl p-4 flex items-center justify-center overflow-hidden border border-zinc-800">
-                {/* Visual Canvas SVG representing Sheet Layout */}
-                <svg className="w-full h-full border border-amber-500/30 rounded-lg bg-zinc-950 p-2" viewBox="0 0 100 100">
-                  {/* Grid of pieces */}
-                  {Array.from({ length: Math.min(64, calcResults.piecesPerSheet) }).map((_, idx) => {
-                    const row = Math.floor(idx / Math.max(1, calcResults.cols));
-                    const col = idx % Math.max(1, calcResults.cols);
-                    const cellW = 90 / Math.max(1, calcResults.cols);
-                    const cellH = 90 / Math.max(1, calcResults.rows);
-                    return (
-                      <rect
-                        key={idx}
-                        x={5 + col * cellW}
-                        y={5 + row * cellH}
-                        width={cellW * 0.9}
-                        height={cellH * 0.9}
-                        rx="1"
-                        fill="#f59e0b"
-                        fillOpacity="0.4"
-                        stroke="#f59e0b"
-                        strokeWidth="0.5"
-                      />
-                    );
-                  })}
-                </svg>
+                {productType === 'Impresión 3D' ? (
+                  /* stylized 3D printer mockup */
+                  <div className="text-center w-full h-full flex flex-col justify-between p-4">
+                    <span className="text-amber-400 text-xs font-black uppercase tracking-wider block">Modelado en 3D</span>
+                    <svg className="w-40 h-40 mx-auto" viewBox="0 0 100 100" fill="none">
+                      {/* Frame */}
+                      <rect x="15" y="10" width="70" height="80" rx="3" stroke="#52525b" strokeWidth="3" />
+                      {/* Rods */}
+                      <line x1="25" y1="10" x2="25" y2="90" stroke="#71717a" strokeWidth="1.5" />
+                      <line x1="75" y1="10" x2="75" y2="90" stroke="#71717a" strokeWidth="1.5" />
+                      {/* Bed */}
+                      <rect x="20" y="70" width="60" height="4" fill="#a1a1aa" />
+                      {/* Print object (vase/pot) */}
+                      <path d="M40,70 L35,50 L45,35 L55,35 L65,50 L60,70 Z" fill="#f59e0b" fillOpacity="0.8" stroke="#d97706" strokeWidth="1" />
+                      {/* Hotend rail */}
+                      <line x1="15" y1="35" x2="85" y2="35" stroke="#3f3f46" strokeWidth="4" />
+                      {/* Extruder nozzle */}
+                      <path d="M46,30 L54,30 L52,38 L50,42 L48,38 Z" fill="#e4e4e7" stroke="#27272a" strokeWidth="1" />
+                      {/* Laser / extruder beam */}
+                      <line x1="50" y1="42" x2="50" y2="47" stroke="#ef4444" strokeWidth="1" strokeDasharray="1,1" />
+                    </svg>
+                    <div className="text-xs text-zinc-400">Visualización de deposición fundida por filamento</div>
+                  </div>
+                ) : productType === 'Grabado Láser' ? (
+                  /* stylized laser engraver mockup */
+                  <div className="text-center w-full h-full flex flex-col justify-between p-4">
+                    <span className="text-indigo-400 text-xs font-black uppercase tracking-wider block">Grabado Láser Activo</span>
+                    <svg className="w-40 h-40 mx-auto" viewBox="0 0 100 100" fill="none">
+                      {/* Workbed grid */}
+                      <rect x="15" y="15" width="70" height="70" rx="2" stroke="#4b5563" strokeWidth="2" />
+                      <path d="M15,30 H85 M15,45 H85 M15,60 H85 M15,75 H85 M30,15 V85 M45,15 V85 M60,15 V85 M75,15 V85" stroke="#1f2937" strokeWidth="0.5" />
+                      {/* Material to engrave */}
+                      <rect x="30" y="30" width="40" height="40" rx="4" fill="#78350f" fillOpacity="0.3" stroke="#b45309" strokeWidth="1.5" />
+                      {/* Logo or pattern being engraved */}
+                      <circle cx="50" cy="50" r="12" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3,3" />
+                      <path d="M45,50 H55 M50,45 V55" stroke="#ef4444" strokeWidth="1" />
+                      {/* Laser pointer nozzle */}
+                      <circle cx="50" cy="50" r="4" fill="#ef4444" />
+                      <circle cx="50" cy="50" r="8" stroke="#ef4444" strokeWidth="1" strokeOpacity="0.5" />
+                    </svg>
+                    <div className="text-xs text-zinc-400">Visualización de grabado vectorial por haz enfocado</div>
+                  </div>
+                ) : (
+                  /* Visual Canvas SVG representing Sheet Layout */
+                  <svg className="w-full h-full border border-amber-500/30 rounded-lg bg-zinc-950 p-2" viewBox="0 0 100 100">
+                    {/* Grid of pieces */}
+                    {Array.from({ length: Math.min(64, calcResults.piecesPerSheet) }).map((_, idx) => {
+                      const row = Math.floor(idx / Math.max(1, calcResults.cols));
+                      const col = idx % Math.max(1, calcResults.cols);
+                      const cellW = 90 / Math.max(1, calcResults.cols);
+                      const cellH = 90 / Math.max(1, calcResults.rows);
+                      return (
+                        <rect
+                          key={idx}
+                          x={5 + col * cellW}
+                          y={5 + row * cellH}
+                          width={cellW * 0.9}
+                          height={cellH * 0.9}
+                          rx="1"
+                          fill="#f59e0b"
+                          fillOpacity="0.4"
+                          stroke="#f59e0b"
+                          strokeWidth="0.5"
+                        />
+                      );
+                    })}
+                  </svg>
+                )}
               </div>
 
-              <div className="space-y-2 text-xs font-medium text-zinc-600 bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                <div className="flex justify-between"><span>Pliego:</span> <strong className="text-zinc-900">{matWidth} x {matLength} cm</strong></div>
-                <div className="flex justify-between"><span>Pieza:</span> <strong className="text-zinc-900">{pieceWidthCm} x {pieceLengthCm} cm</strong></div>
-                <div className="flex justify-between"><span>Distribución:</span> <strong className="text-zinc-900">{calcResults.cols} col x {calcResults.rows} filas</strong></div>
-                <div className="flex justify-between"><span>Total / Pliego:</span> <strong className="text-amber-600 font-bold">{calcResults.piecesPerSheet} unid.</strong></div>
-              </div>
+              {productType !== 'Impresión 3D' && productType !== 'Grabado Láser' ? (
+                <div className="space-y-2 text-xs font-medium text-zinc-600 bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                  <div className="flex justify-between"><span>Pliego:</span> <strong className="text-zinc-900">{matWidth} x {matLength} cm</strong></div>
+                  <div className="flex justify-between"><span>Pieza:</span> <strong className="text-zinc-900">{pieceWidthCm} x {pieceLengthCm} cm</strong></div>
+                  <div className="flex justify-between"><span>Distribución:</span> <strong className="text-zinc-900">{calcResults.cols} col x {calcResults.rows} filas</strong></div>
+                  <div className="flex justify-between"><span>Total / Pliego:</span> <strong className="text-amber-600 font-bold">{calcResults.piecesPerSheet} unid.</strong></div>
+                </div>
+              ) : (
+                <div className="space-y-2 text-xs font-medium text-zinc-600 bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                  <div className="flex justify-between">
+                    <span>Tipo Servicio:</span> 
+                    <strong className="text-zinc-900 uppercase">{productType}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Cantidad Total:</span> 
+                    <strong className="text-zinc-900">{quantity} piezas</strong>
+                  </div>
+                  {productType === 'Impresión 3D' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Peso Estimado Unitario:</span> 
+                        <strong className="text-zinc-900">{gramsPerPiece} gr</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Filamento Total Estimado:</span> 
+                        <strong className="text-amber-600 font-bold">{calcResults.totalGrams} gramos</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tiempo Impresión Total:</span> 
+                        <strong className="text-zinc-900">{calcResults.totalHours.toFixed(1)} horas</strong>
+                      </div>
+                    </>
+                  )}
+                  {productType === 'Grabado Láser' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Tiempo Grabado Unitario:</span> 
+                        <strong className="text-zinc-900">{laserHoursPerPiece} horas</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Origen de la Pieza:</span> 
+                        <strong className="text-zinc-900">
+                          {laserPieceSource === 'cliente' ? 'Traída por el cliente' : 'Suministrada por el Taller'}
+                        </strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tiempo de Máquina Total:</span> 
+                        <strong className="text-indigo-600 font-bold">{calcResults.totalHours.toFixed(1)} horas</strong>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Desglose de Costos de Producción */}
               <div className="space-y-2 text-xs font-medium text-zinc-600 bg-amber-50/40 p-4 rounded-xl border border-amber-100/60">
                 <div className="text-xs font-black text-amber-800 uppercase tracking-wider mb-2 border-b border-amber-200/50 pb-1 flex items-center gap-1">
                   <span>💰</span> Costos de Producción & Margen
                 </div>
-                <div className="flex justify-between">
-                  <span>Costo Material Base:</span> 
-                  <strong className="text-zinc-900">${calcResults.baseMaterialCost.toFixed(2)} USD</strong>
-                </div>
+                
+                {productType === 'Impresión 3D' ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span>Costo Filamento Base ({calcResults.totalGrams}gr):</span> 
+                      <strong className="text-zinc-900">${calcResults.baseMaterialCost.toFixed(2)} USD</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Costo de Operación ({calcResults.totalHours.toFixed(1)}hrs):</span> 
+                      <strong className="text-zinc-900">${calcResults.machineLaborCost?.toFixed(2)} USD</strong>
+                    </div>
+                  </>
+                ) : productType === 'Grabado Láser' ? (
+                  <>
+                    {laserPieceSource === 'taller' && (
+                      <div className="flex justify-between">
+                        <span>Costo de Piezas Suministradas:</span> 
+                        <strong className="text-zinc-900">${calcResults.baseMaterialCost.toFixed(2)} USD</strong>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span>Costo Tiempo Grabado ({calcResults.totalHours.toFixed(1)}hrs):</span> 
+                      <strong className="text-zinc-900">${calcResults.machineLaborCost?.toFixed(2)} USD</strong>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex justify-between">
+                    <span>Costo Material Base:</span> 
+                    <strong className="text-zinc-900">${calcResults.baseMaterialCost.toFixed(2)} USD</strong>
+                  </div>
+                )}
                 
                 {calcResults.laminationCostTotal > 0 && (
                   <div className="flex justify-between">

@@ -400,19 +400,30 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
               </label>
               <select
                 value={unit}
-                onChange={e => setUnit(e.target.value)}
+                onChange={e => {
+                  const val = e.target.value;
+                  setUnit(val);
+                  if (val === 'gr') {
+                    setWidthCm(0);
+                    setLengthCm(0);
+                  } else {
+                    setWidthCm(100);
+                    setLengthCm(100);
+                  }
+                }}
                 className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-800 focus:bg-white focus:border-amber-500 transition-all outline-none"
               >
                 <option value="pliego">Pliego</option>
                 <option value="rollo">Rollo</option>
                 <option value="m2">m²</option>
                 <option value="unidad">Unidad</option>
+                <option value="gr">Gramos (gr)</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                Stock Inicial / Cantidad
+                {unit === 'gr' ? 'Stock Inicial (Gramos)' : 'Stock Inicial / Cantidad'}
               </label>
               <input
                 type="number"
@@ -423,51 +434,56 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                Ancho (cm)
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={widthCm}
-                onChange={e => setWidthCm(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="100"
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-800 focus:bg-white focus:border-amber-500 transition-all outline-none"
-              />
-            </div>
+            {unit !== 'gr' ? (
+              <>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                    Ancho (cm)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={widthCm}
+                    onChange={e => setWidthCm(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="100"
+                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-800 focus:bg-white focus:border-amber-500 transition-all outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
+                    Largo (cm)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={lengthCm}
+                    onChange={e => setLengthCm(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="100"
+                    className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-800 focus:bg-white focus:border-amber-500 transition-all outline-none"
+                  />
+                </div>
+              </>
+            ) : null}
 
             <div>
               <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                Largo (cm)
+                {unit === 'gr' ? 'Precio Venta / Gramo ($)' : 'Precio Venta / m² ($)'}
               </label>
               <input
                 type="number"
-                min="1"
-                value={lengthCm}
-                onChange={e => setLengthCm(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="100"
-                className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-800 focus:bg-white focus:border-amber-500 transition-all outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                Precio Venta / m² ($)
-              </label>
-              <input
-                type="number"
-                step="0.01"
+                step="0.001"
                 min="0"
                 value={pricePerM2}
                 onChange={e => setPricePerM2(e.target.value === '' ? '' : Number(e.target.value))}
+                placeholder={unit === 'gr' ? "Ej. 0.05" : "Ej. 15"}
                 className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-sm font-semibold text-zinc-800 focus:bg-white focus:border-amber-500 transition-all outline-none"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-zinc-600 mb-2 uppercase tracking-wider">
-                m² Dañados Inciales
+                {unit === 'gr' ? 'Gramos Dañados Inciales' : 'm² Dañados Inciales'}
               </label>
               <input
                 type="number"

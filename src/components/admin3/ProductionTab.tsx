@@ -61,6 +61,7 @@ export const ProductionTab: React.FC<ProductionTabProps> = ({
         const { data: ops } = await supabase
           .from('profiles')
           .select('id, name, email, role')
+          .in('role', ['operator', 'admin', 'superadmin'])
           .order('name');
         if (ops) {
           setOperatorsList(ops);
